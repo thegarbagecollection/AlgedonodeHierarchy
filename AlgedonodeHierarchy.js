@@ -1,3 +1,7 @@
+// Implementation of the algedonode hierarchy / cluster from Stafford Beer's Brain of the Firm, Chapter 5
+// Also includes a metasystem view - a metasystem by definition can't see any details, and won't
+// have access to every input state at once.
+
 
 const coloursDefault = {
   background: "darkgrey",
@@ -1797,6 +1801,7 @@ function setRandomContacts() {
   contactsCurrent[2] = randomContactPositions8(2)
   contactsCurrent[4] = randomContactPositions8(4)
   contactsCurrent[8] = randomContactPositions8(8)
+  clearPlot()
   c.setNewContactPositions()
   c.clear()
   c.propagateDialValues()
@@ -1806,6 +1811,7 @@ function setRandomContacts() {
 
 function restoreDefaultContacts() {
   contactsCurrent = { ...contactsDefault }
+  clearPlot()
   c.setNewContactPositions()
   c.clear()
   c.propagateDialValues()
@@ -2079,7 +2085,7 @@ $( function() {
 
   $("#labelDataPoints").text(`Data point store space: ${InitialValues.DATA_STORE_SIZE}`)
 
-  $("#reset-plot-and-data").click(() => clearPlot())
+  $("#reset-plot-and-data").click(clearPlot)
 
   $("#random-contacts").button().click(setRandomContacts)
   $("#default-contacts").button().click(restoreDefaultContacts)
