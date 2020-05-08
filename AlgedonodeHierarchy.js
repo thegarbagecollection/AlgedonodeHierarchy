@@ -5,13 +5,7 @@
 
 
 
-let coloursCurrent = { ...coloursDefault }
 
-let coloursTemp = { ...coloursDefault }
-
-let contactsCurrent = { ...contactsDefault }
-
-let metasystemMode = false
 
 
 function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {

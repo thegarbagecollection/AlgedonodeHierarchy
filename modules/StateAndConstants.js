@@ -27,3 +27,11 @@ const contactsDefault = {
     "4": [contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4],
     "8": [contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8],
 }
+
+let coloursCurrent = { ...coloursDefault }
+
+let coloursTemp = { ...coloursDefault }
+
+let contactsCurrent = { ...contactsDefault }
+
+let metasystemMode = false
