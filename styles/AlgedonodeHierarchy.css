@@ -1,0 +1,71 @@
+.vslide {
+    float: left;
+    margin: 15px;
+    height:150px;
+}
+
+#canvas-div {
+    float:left;
+}
+#dial-div {
+    float:left;
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+#sliders {
+    margin-left: 50px;
+}
+
+#topstuff {
+    float: none;
+}
+
+#canvas {
+    border: 1px solid black;
+}
+
+#plot {
+    border: 1px solid black;
+}
+
+#states {
+    border: 1px solid black;
+}
+
+#datapoints {
+    width: 400px;
+    float: left;
+}
+
+#labelSpeed  {
+    font-family: sans-serif;
+}
+#labelDataPoints {
+    font-family: sans-serif;
+}
+
+#options {
+    float: inline-start;
+}
+
+#plot-div {
+    float: left;
+}
+
+#systemSettings {
+    float:left;
+    margin-right: 10px;
+}
+
+.ui-slider-handle {
+    text-align: center;
+}
+
+.label-colourpicker {
+    margin-left: 0.5em;
+}
+
+#metasystem-toggle {
+    width: 12em;
+}
