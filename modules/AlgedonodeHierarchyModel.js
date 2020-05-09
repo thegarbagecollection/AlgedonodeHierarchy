@@ -27,7 +27,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     return ret
   }
   
-  class Cluster {
+  class Hierarchy {
       constructor() {
           this.positionInfo = {
             columnSpacing: 50, // distance between columns
