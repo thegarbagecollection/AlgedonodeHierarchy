@@ -35,3 +35,6 @@ let coloursTemp = { ...coloursDefault }
 let contactsCurrent = { ...contactsDefault }
 
 let metasystemMode = false
+
+let plotCtx
+let statesCtx
