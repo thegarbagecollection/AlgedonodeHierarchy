@@ -509,7 +509,7 @@ window.onload = () => {
   let statesCanvas = document.getElementById("states")
   statesCtx = statesCanvas.getContext("2d")
 
-  c = new Hierarchy()
+  c = new Hierarchy(new AlgedonodeHierarchyRenderer(context))
   c.setupConnections()
   for (let i = 0; i < 4; i++) {
     $("#dial" + i).val(1).trigger('change')

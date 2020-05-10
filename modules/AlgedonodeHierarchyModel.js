@@ -1,4 +1,5 @@
 
+// TODO: move this to AH Renderer and delete
 function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
     // offsets are the starting point
     let rowOffset = 100
@@ -28,13 +29,15 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   }
   
   class Hierarchy {
-      constructor() {
+      // takes an AlgedonodeHierarchyRenderer
+      constructor(renderer) {
           this.positionInfo = {
             columnSpacing: 50, // distance between columns
             columnWidth: 10, // width of a single column
             rowSpacing: 100, // distance between rows
             rowHeight: 30, // height of a single row
           }
+          this.renderer = renderer
           this.dials = []
           this.rows = []
           this.lights = []
@@ -164,44 +167,19 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   
       renderTo(context) {
         this.renderComponentsTo(context) // dial + outputs, algedonode, brass pads, strips, lights
-        this.renderLabelsTo(context)
+        this.renderLabels()
       }
   
-      renderLabelsTo(context) {
-        for (let i = 0; i < 8; i++) {
-          let {cX, cY} = elementCentre(4.65, i, this.positionInfo)
-          context.beginPath()
-          context.font = "" + this.positionInfo.columnWidth * 2 + "px Arial"
-          context.textAlign = "center"
-          context.textBaseline = "middle"
-          context.fillStyle = "black"
-          context.fillText(`${i + 1}`, cX, cY)
-          context.stroke()
-        }
-  
-        let {cX, cY} = elementCentre(4.25, -1, this.positionInfo)
-        context.beginPath()
-        context.font = "" + this.positionInfo.columnWidth * 2 + "px Arial"
-        context.textAlign = "center"
-        context.textBaseline = "middle"
-        context.fillStyle = "black"
-        context.fillText(`A`, cX, cY - 0.4 * this.positionInfo.rowHeight)
-        context.fillText(`B`, cX, cY + 0.5 * this.positionInfo.rowHeight)
-        context.stroke()
-  
+      renderLabels() {
+        this.renderer.rowAndColumnLabels()
       }
   
       renderComponentsTo(context) {
         this.algedonodeActivators.forEach(aa => { aa.render(context, this.positionInfo) })
-        this.dials.forEach(d => { d.render(context, this.positionInfo) })
-        this.strips.forEach(s => { s.render(context, this.positionInfo) })
+        this.dials.forEach(d => { d.render(this.renderer) })
+        this.strips.forEach(s => { s.render(this.renderer) } )
         this.rows.forEach( r => { r.forEach( c => { c.render(context, this.positionInfo) } )} )
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.render(context, this.positionInfo) ) } )
-        // render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      }
-  
-      renderConnectionsBetweenTo(context) {
-        // console.log("renderConnections needs implementing")
       }
   
       // newValue should be in [-1, 1]
@@ -307,12 +285,12 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   
       renderMetasystemTo(context) {
         this.renderMetasystemVisibleComponentsTo(context) // dial + outputs, algedonode, brass pads, strips, lights
-        this.renderLabelsTo(context)
+        this.renderLabels()
       }
   
       renderMetasystemVisibleComponentsTo(context) {
-        this.dials.forEach(d => { d.render(context, this.positionInfo) })
-        this.strips.forEach(s => { s.render(context, this.positionInfo) })
+        this.dials.forEach(d => { d.render(this.renderer) })
+        this.strips.forEach(s => { s.render(this.renderer) })
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.renderAsMetaSystem(context, this.positionInfo) ) } )
       
         context.fillStyle = "black"
@@ -747,30 +725,14 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     getDialOutputsForAlgedonodes() {
       return this.dialOutputs.slice(0, 8)
     }
-    render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
+    render(renderer) {
   
       for (let i = 0; i < 10; i++) {
-        this.dialOutputs[i].render(context, this.row, i,  { columnSpacing, columnWidth, rowSpacing, rowHeight })
+        this.dialOutputs[i].render(renderer, this.row, i)
       }
   
-      let { cX, cY } = elementCentre(this.row, 9, { columnSpacing, columnWidth, rowSpacing, rowHeight })
+      renderer.dial(this.row, this.value)
   
-      context.lineWidth = 1.0
-      context.strokeStyle = "black"
-      
-      context.beginPath()
-      context.arc(cX, cY, rowHeight, 0, 2 * Math.PI)
-      context.fillStyle = "white"
-      context.fill()
-      context.stroke()
-  
-      context.textAlign = "center"
-      context.textBaseline = "middle"
-      context.font = "40px arial"
-      context.fillStyle = "black"
-      context.fillText(this.value, cX, cY)
-  
-   
   
     }
   
@@ -809,48 +771,20 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       this.contacts.push(contact)
     }
   
-    render(context, row, outputNum, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(row, 9, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-  
-      // We have 2x rowHeight space to work with - rowHeight is radius of parent dial
-      // Use 1.5x rowHeight, 5 connections each side, 10 connections total
-      let gapBetweenOutputs = rowHeight * 1.5 / 9
-  
-      // so 4.5 gaps each side
-      let firstContactY = cY - 4.5 * gapBetweenOutputs
-  
-      let contactY = firstContactY + outputNum * gapBetweenOutputs
-  
-      context.lineWidth = 1.3
-      context.strokeStyle = this.active ? coloursCurrent.activated : coloursCurrent.dialOutput
-      context.beginPath()
-      context.moveTo(cX, contactY)
-      context.lineTo(cX - 2 * rowHeight, contactY)
-      context.stroke()
-  
+    render(renderer, row, outputNum) {
+      renderer.dialOutput(row, this.active, outputNum)
     }
   }
   
   class Strip {
-    // 4-element array of brass pad pairs, in row order
+    // 4-element array of brass pad pairs,    in row order
     constructor(brassPadPairs, column) {
       this.brassPadPairs = brassPadPairs
       this.offset = 0 // will be controlled by sliders
       this.column = column
     }
-    render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let { cX, cY } = elementCentre(0, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      // let stripTL = { x: cX - columnWidth, y: cY - (5 * rowHeight / 4) + (this.offset * rowHeight / 2)}
-      let stripTL = { x: cX - columnWidth, y: cY - 2.5 * rowHeight + (this.offset * rowHeight / 2)}
-      let height = 3 * rowSpacing + 5 * rowHeight
-  
-      context.lineWidth = 1.0
-      context.strokeStyle = coloursCurrent.strip
-      context.fillStyle = coloursCurrent.strip
-      context.clearRect(stripTL.x, stripTL.y, columnWidth, height)
-      context.fillRect(stripTL.x, stripTL.y, columnWidth, height)
-      context.strokeRect(stripTL.x, stripTL.y, columnWidth, height)
-  
+    render(renderer) {
+      renderer.strip(this.column, this.offset)
     }
     setOffset(newOffset) {
       this.offset = newOffset
