@@ -86,13 +86,70 @@ class AlgedonodeHierarchyRenderer {
     let stripTL = { x: cX - this.positionInfo.columnWidth, y: cY - 2.5 * this.positionInfo.rowHeight + (offset * this.positionInfo.rowHeight / 2)}
     let height = 3 * this.positionInfo.rowSpacing + 5 * this.positionInfo.rowHeight
 
-    context.lineWidth = 1.0
-    context.strokeStyle = coloursCurrent.strip
-    context.fillStyle = coloursCurrent.strip
-    context.clearRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
-    context.fillRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
-    context.strokeRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
+    this.ctx.lineWidth = 1.0
+    this.ctx.strokeStyle = coloursCurrent.strip
+    this.ctx.fillStyle = coloursCurrent.strip
+    this.ctx.clearRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
+    this.ctx.fillRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
+    this.ctx.strokeRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
   }
+
+  light(column, rowOffset, aOrB, active, activationSource) {
+    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let radius = this.positionInfo.rowHeight / 4
+    let y = cY + this.positionInfo.rowHeight * rowOffset
+
+    this.lightConnection(column, rowOffset, aOrB, active, activationSource)
+
+    this.ctx.lineWidth = 1.0
+    let onColour = aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+    let offColour = aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+
+    this.ctx.fillStyle = active ? onColour : offColour
+    this.ctx.strokeStyle = active ? onColour : offColour
+    this.ctx.beginPath()
+    this.ctx.arc(cX, y, radius, 0, 2 * Math.PI)
+    this.ctx.fill()
+    this.ctx.stroke()
+  }
+
+  lightConnection(column, rowOffset, aOrB, active, activationSource) {
+    this.ctx.strokeStyle = active ? coloursCurrent.activated : "black"
+    var {x:x1, y:y1} = this.lightConnectionCoords(column, rowOffset, aOrB)
+    this.ctx.beginPath()
+    this.ctx.moveTo(x1, y1)
+    this.ctx.arc(x1, y1, 2, 0 , 2 * Math.PI)
+
+    var {x:x2, y:y2} = this.lightWireJoinCoords(column, rowOffset)
+    this.ctx.lineTo(x2, y2)    
+    this.ctx.stroke()
+    
+    this.ctx.beginPath()
+    this.ctx.lineWidth = 1.5
+    this.ctx.strokeStyle = activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.moveTo(x1, y1)
+    this.ctx.lineTo(x1, y1 + this.positionInfo.rowHeight / 4)
+    this.ctx.lineTo(x1 + this.positionInfo.columnWidth / 4, y1 + this.positionInfo.rowHeight / 4)
+    this.ctx.stroke()
+  }
+
+  metasystemLight(column, rowOffset, aOrB, active) {
+    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let radius = this.positionInfo.rowHeight / 4
+    let y = cY + this.positionInfo.rowHeight * rowOffset
+
+    this.ctx.lineWidth = 1.0
+    let onColour = aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+    let offColour = aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+
+    this.ctx.fillStyle = active ? onColour : offColour
+    this.ctx.strokeStyle = active ? onColour : offColour
+    this.ctx.beginPath()
+    this.ctx.arc(cX, y, radius, 0, 2 * Math.PI)
+    this.ctx.fill()
+    this.ctx.stroke()
+  }
+
 
   // start, and each element of to, are objects { x, y }
   line(start, ...to) {
@@ -109,6 +166,26 @@ class AlgedonodeHierarchyRenderer {
     return {
       cX: columnOffset + column * columnSpacing,
       cY: rowOffset + row * rowSpacing,
+    }
+  }
+
+  lightWireJoinCoords(column, rowOffset) {
+    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let radius = this.positionInfo.rowHeight / 4
+    let y = cY + this.positionInfo.rowHeight * rowOffset
+
+    return {
+      x: cX - radius,
+      y
+    }
+  }
+
+  lightConnectionCoords(column, rowOffset, aOrB) {
+    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let y = cY + this.positionInfo.rowHeight * rowOffset
+    return {
+      x: cX - (aOrB === "B" ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
+      y: y
     }
   }
 }

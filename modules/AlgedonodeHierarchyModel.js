@@ -179,7 +179,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) } )
         this.rows.forEach( r => { r.forEach( c => { c.render(context, this.positionInfo) } )} )
-        this.lights.forEach( lightPair => { lightPair.forEach( light => light.render(context, this.positionInfo) ) } )
+        this.lights.forEach( lightPair => { lightPair.forEach( light => light.render(this.renderer) ) } )
       }
   
       // newValue should be in [-1, 1]
@@ -291,7 +291,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       renderMetasystemVisibleComponentsTo(context) {
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) })
-        this.lights.forEach( lightPair => { lightPair.forEach( light => light.renderAsMetaSystem(context, this.positionInfo) ) } )
+        this.lights.forEach( lightPair => { lightPair.forEach( light => light.renderAsMetaSystem(this.renderer) ) } )
       
         context.fillStyle = "black"
         let x1 = this.positionInfo.columnSpacing
@@ -432,10 +432,6 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         }
       }
   
-      renderLightWires(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-        let {cX, cY} = elementCentre(this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-        this.brassPadPair.renderLightOutputWireMetasystem(context, cX, cY, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      }
   }
   
   class Contact {
@@ -609,32 +605,6 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
           context.stroke()
     }
     
-    renderLightOutputWireMetasystem(context, cX, cY, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let lx = cX - columnWidth
-      let yOffset = this.offset * rowHeight / 2
-      let pad0TL = { x: lx, y: cY - rowHeight + yOffset}
-      let pad1TL = { x: lx, y: cY + yOffset}
-  
-      context.lineWidth = 1.0
-      console.log("HERE2")
-      var {x, y} = this.outputs0.getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-      // output0 wire
-      context.strokeStyle = this.active0 ? coloursCurrent.activated : "black"
-      context.beginPath()
-      context.moveTo(pad0TL.x, pad0TL.y + 0.1 * rowHeight)
-      context.lineTo(pad0TL.x - 0.8 * columnWidth, pad0TL.y + 0.1 * rowHeight)
-      context.lineTo(pad0TL.x - 0.8 * columnWidth, y)
-      context.stroke()
-  
-      var {x, y} = this.outputs1.getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-      // output1 wire
-      context.strokeStyle = this.active1 ? coloursCurrent.activated : "black"
-      context.beginPath()
-      context.moveTo(pad1TL.x, pad1TL.y + 0.9 * rowHeight)
-      context.lineTo(pad1TL.x - 0.4 * columnWidth, pad1TL.y + 0.9 * rowHeight)
-      context.lineTo(pad1TL.x - 0.4 * columnWidth, y)
-      context.stroke()
-  }
   }
   
   class AlgedonodeSetActivator {
@@ -819,76 +789,18 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       this.active = false
       this.activationSource = ""
     }
-    render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(4.25, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      let radius = rowHeight / 4
-      let y = cY + rowHeight * this.rowOffset
-  
-      this.renderConnection(context, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-  
-      context.lineWidth = 1.0
-      let onColour = this.aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-      let offColour = this.aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
-  
-      context.fillStyle = this.active ? onColour : offColour
-      context.strokeStyle = this.active ? onColour : offColour
-      context.beginPath()
-      context.arc(cX, y, radius, 0, 2 * Math.PI)
-      context.fill()
-      context.stroke()
-  
+    render(renderer) {
+      renderer.light(this.column, this.rowOffset, this.aOrB, this.active, this.activationSource)
     }
   
-    renderConnection(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      context.strokeStyle = this.active ? coloursCurrent.activated : "black"
-      var {x:x1, y:y1} = this.getConnectionCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-      context.beginPath()
-      context.moveTo(x1, y1)
-      context.arc(x1, y1, 2, 0 , 2 * Math.PI)
-  
-      var {x:x2, y:y2} = this.getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-      context.lineTo(x2, y2)    
-      context.stroke()
-  
-      
-      
-      context.beginPath()
-      context.lineWidth = 1.5
-      context.strokeStyle = this.activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
-      context.moveTo(x1, y1)
-      context.lineTo(x1, y1 + rowHeight / 4)
-      context.lineTo(x1 + columnWidth / 4, y1 + rowHeight / 4)
-      context.stroke()
-  
+ 
+    renderAsMetaSystem(renderer) {
+      renderer.metasystemLight(this.column, this.rowOffset, this.aOrB, this.active)
     }
   
-    renderAsMetaSystem(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(4.25, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      let radius = rowHeight / 4
-      let y = cY + rowHeight * this.rowOffset
-  
-      context.lineWidth = 1.0
-      let onColour = this.aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-      let offColour = this.aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
-  
-      context.fillStyle = this.active ? onColour : offColour
-      context.strokeStyle = this.active ? onColour : offColour
-      context.beginPath()
-      context.arc(cX, y, radius, 0, 2 * Math.PI)
-      context.fill()
-      context.stroke()
-    }
-  
-    getConnectionCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(4.25, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      let y = cY + rowHeight * this.rowOffset
-      return {
-        x: cX - (this.aOrB === "B" ? 0.8 : 0.4) * columnWidth - columnWidth, 
-        y: y
-      }
-    }
   
     getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight }) {
+      console.log("REMOVE THIS")
       let {cX, cY} = elementCentre(4.25, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
       let radius = rowHeight / 4
       let y = cY + rowHeight * this.rowOffset
