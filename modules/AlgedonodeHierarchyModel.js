@@ -376,9 +376,9 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
           ##
         */
   
-        let {cX, cY} = elementCentre(this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
   
-        this.brassPadPair.render(context, cX, cY, { columnSpacing, columnWidth, rowSpacing, rowHeight })
+  
+        this.brassPadPair.render(renderer, this.row, this.column)
   
         renderer.algedonode(this.row, this.column, this.active)
   
@@ -492,75 +492,10 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     setOffset(offset) {
       this.offset= offset
     }
-    render(context, cX, cY, { columnSpacing, columnWidth, rowSpacing, rowHeight }){
-      // (cX, cY) is centre of algedonode-padpair group
-      let lx = cX - columnWidth
-      let yOffset = this.offset * rowHeight / 2
-      let pad0TL = { x: lx, y: cY - rowHeight + yOffset}
-      let pad1TL = { x: lx, y: cY + yOffset}
-  
-      context.lineWidth = 1.0
-  
-      context.strokeStyle = this.active0 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
-      context.fillStyle = coloursCurrent.brassPad
-      context.fillRect(pad0TL.x, pad0TL.y, columnWidth, rowHeight)
-      context.strokeRect(pad0TL.x, pad0TL.y, columnWidth, rowHeight)
-      context.strokeStyle = this.active1 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
-      context.fillStyle = coloursCurrent.brassPad
-      context.fillRect(pad1TL.x, pad1TL.y, columnWidth, rowHeight)
-      context.strokeRect(pad1TL.x, pad1TL.y, columnWidth, rowHeight)
-  
-      if (this.isLastRow) {
-        this.renderLightOutputWire(context, cX, cY, pad0TL, pad1TL, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      }
-      else {
-        this.renderStandardOutputWire(context, cX, cY, pad0TL, pad1TL,  { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      }
-  
-      //this.outputs0.render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      //this.outputs1.render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight })
+    render(renderer, row, column) {
+      renderer.brassPadPair(row, column, this.active0, this.active1, this.offset, this.isLastRow, this.outputs0, this.outputs1)
     } 
   
-    renderStandardOutputWire(context, cX, cY, pad0TL, pad1TL, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      // output0 wire
-      context.strokeStyle = this.active0 ? coloursCurrent.activated : "black"
-      context.beginPath()
-      context.moveTo(pad0TL.x, pad0TL.y + 0.1 * rowHeight)
-      context.lineTo(pad0TL.x - 0.8 * columnWidth, pad0TL.y + 0.1 * rowHeight)
-      context.lineTo(pad0TL.x - 0.8 * columnWidth, cY - 0.3 * rowHeight)
-      context.arc(pad0TL.x - 0.8 * columnWidth, cY - 0.3 * rowHeight, 2, 0, 2 * Math.PI)
-      context.stroke()
-  
-      // output1 wire
-      context.strokeStyle = this.active1 ? coloursCurrent.activated : "black"
-      context.beginPath()
-      context.moveTo(pad1TL.x, pad1TL.y + 0.9 * rowHeight)
-      context.lineTo(pad1TL.x - 0.4 * columnWidth, pad1TL.y + 0.9 * rowHeight)
-      context.lineTo(pad1TL.x - 0.4 * columnWidth, cY + 0.3 * rowHeight)
-      context.arc(pad1TL.x - 0.4 * columnWidth, cY + 0.3 * rowHeight, 2, 0, 2 * Math.PI)
-      context.stroke()
-    }
-  
-    renderLightOutputWire(context, cX, cY, pad0TL, pad1TL, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      
-          var {x, y} = this.outputs0.getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-          // output0 wire
-          context.strokeStyle = this.active0 ? coloursCurrent.activated : "black"
-          context.beginPath()
-          context.moveTo(pad0TL.x, pad0TL.y + 0.1 * rowHeight)
-          context.lineTo(pad0TL.x - 0.8 * columnWidth, pad0TL.y + 0.1 * rowHeight)
-          context.lineTo(pad0TL.x - 0.8 * columnWidth, y)
-          context.stroke()
-      
-          var {x, y} = this.outputs1.getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight })
-          // output1 wire
-          context.strokeStyle = this.active1 ? coloursCurrent.activated : "black"
-          context.beginPath()
-          context.moveTo(pad1TL.x, pad1TL.y + 0.9 * rowHeight)
-          context.lineTo(pad1TL.x - 0.4 * columnWidth, pad1TL.y + 0.9 * rowHeight)
-          context.lineTo(pad1TL.x - 0.4 * columnWidth, y)
-          context.stroke()
-    }
     
   }
   

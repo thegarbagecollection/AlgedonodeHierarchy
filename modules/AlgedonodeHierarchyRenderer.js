@@ -188,16 +188,79 @@ class AlgedonodeHierarchyRenderer {
     let x = cX
     let y = cY + position * this.positionInfo.rowHeight
 
-    context.lineWidth = 1.5
-    context.strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
-    context.beginPath()
-    context.moveTo(x, y)
-    context.lineTo(x - this.positionInfo.columnWidth * 3 / 4, y)
-    context.stroke()
+    this.ctx.lineWidth = 1.5
+    this.ctx.strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.beginPath()
+    this.ctx.moveTo(x, y)
+    this.ctx.lineTo(x - this.positionInfo.columnWidth * 3 / 4, y)
+    this.ctx.stroke()
   }
 
-  brassPadPair(cX, cY) {
+  brassPadPair(row, column, active0, active1, offset, isLastRow, outputs0, outputs1) {
+    // (cX, cY) is centre of algedonode-padpair group
+    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let lx = cX - this.positionInfo.columnWidth
+    let yOffset = offset * this.positionInfo.rowHeight / 2
+    let pad0TL = { x: lx, y: cY - this.positionInfo.rowHeight + yOffset}
+    let pad1TL = { x: lx, y: cY + yOffset}
 
+    this.ctx.lineWidth = 1.0
+
+    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
+    this.ctx.fillStyle = coloursCurrent.brassPad
+    this.ctx.fillRect(pad0TL.x, pad0TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+    this.ctx.strokeRect(pad0TL.x, pad0TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
+    this.ctx.fillStyle = coloursCurrent.brassPad
+    this.ctx.fillRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+    this.ctx.strokeRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+
+    if (isLastRow) {
+        this.lightOutputWire(cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1)
+    }
+    else {
+        this.standardOutputWire(cX, cY, pad0TL, pad1TL, active0, active1)
+    }
+  }
+
+  lightOutputWire(cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1) {
+    var {x, y} = outputs0.getWireJoinCoords(this.positionInfo)
+    // output0 wire
+    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : "black"
+    this.ctx.beginPath()
+    this.ctx.moveTo(pad0TL.x, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, y)
+    this.ctx.stroke()
+
+    var {x, y} = outputs1.getWireJoinCoords(this.positionInfo)
+    // output1 wire
+    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : "black"
+    this.ctx.beginPath()
+    this.ctx.moveTo(pad1TL.x, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, y)
+    this.ctx.stroke()
+  }
+
+  standardOutputWire(cX, cY, pad0TL, pad1TL, active0, active1) {
+    // output0 wire
+    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : "black"
+    this.ctx.beginPath()
+    this.ctx.moveTo(pad0TL.x, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, cY - 0.3 * this.positionInfo.rowHeight)
+    this.ctx.arc(pad0TL.x - 0.8 * this.positionInfo.columnWidth, cY - 0.3 * this.positionInfo.rowHeight, 2, 0, 2 * Math.PI)
+    this.ctx.stroke()
+
+    // output1 wire
+    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : "black"
+    this.ctx.beginPath()
+    this.ctx.moveTo(pad1TL.x, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
+    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, cY + 0.3 * this.positionInfo.rowHeight)
+    this.ctx.arc(pad1TL.x - 0.4 * this.positionInfo.columnWidth, cY + 0.3 * this.positionInfo.rowHeight, 2, 0, 2 * Math.PI)
+    this.ctx.stroke()
   }
 
   // start, and each element of to, are objects { x, y }
