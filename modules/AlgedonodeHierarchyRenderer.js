@@ -263,6 +263,37 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.stroke()
   }
 
+  algedonodeSetActivator(row, startColumn, algedonodes, activationSource, active) {
+    let {cX, cY} = elementCentre(row, startColumn, this.positionInfo)
+  
+  
+    // we want the activator to be above the furthest the top pad can move, start a little to the left of the 
+    // top output wire, and finish at the midpoint of the final algedonode
+    // then other wires come down from it to the top mid of each of the algedonodes
+
+    let tl = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
+
+    let algCoords = algedonodes.map(algedonode => algedonode.getXPos(this.positionInfo)) 
+
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.moveTo(tl.x, tl.y)
+    this.ctx.lineTo(tl.x, tl.y - this.positionInfo.rowHeight / 3.5)
+    this.ctx.stroke()
+
+    this.ctx.beginPath()
+    this.ctx.strokeStyle = active ? coloursCurrent.activated : "black"
+
+    this.ctx.arc(tl.x, tl.y, 2, 0, 2 * Math.PI)
+    this.ctx.moveTo(tl.x, tl.y)
+    this.ctx.lineTo(algCoords[algCoords.length - 1].x + this.positionInfo.columnWidth / 2, tl.y)
+    algCoords.forEach(({x, y}) => {
+      this.ctx.moveTo(x + this.positionInfo.columnWidth / 2, tl.y)
+      this.ctx.lineTo(x + this.positionInfo.columnWidth / 2, y - this.positionInfo.rowHeight / 2)
+    })
+    this.ctx.stroke()
+  }
+
   // start, and each element of to, are objects { x, y }
   line(start, ...to) {
     this.ctx.beginPath()

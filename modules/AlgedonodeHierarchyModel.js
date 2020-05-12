@@ -165,8 +165,8 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.dials.forEach(dial => { dial.clear() })
       }
   
-      renderTo(context) {
-        this.renderComponentsTo(context) // dial + outputs, algedonode, brass pads, strips, lights
+      renderTo() {
+        this.renderComponentsTo() // dial + outputs, algedonode, brass pads, strips, lights
         this.renderLabels()
       }
   
@@ -174,11 +174,11 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.renderer.rowAndColumnLabels()
       }
   
-      renderComponentsTo(context) {
-        this.algedonodeActivators.forEach(aa => { aa.render(context, this.positionInfo) })
+      renderComponentsTo() {
+        this.algedonodeActivators.forEach(aa => { aa.render(this.renderer) })
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) } )
-        this.rows.forEach( r => { r.forEach( c => { c.render(this.renderer, context, this.positionInfo) } )} )
+        this.rows.forEach( r => { r.forEach( c => { c.render(this.renderer) } )} )
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.render(this.renderer) ) } )
       }
   
@@ -283,8 +283,8 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.rows.forEach(algedonodeRow => algedonodeRow.forEach(algedonode => algedonode.setNewContactPositions()))
       }
   
-      renderMetasystemTo(context) {
-        this.renderMetasystemVisibleComponentsTo(context) // dial + outputs, algedonode, brass pads, strips, lights
+      renderMetasystemTo() {
+        this.renderMetasystemVisibleComponentsTo() // dial + outputs, algedonode, brass pads, strips, lights
         this.renderer.metasystemBlackBox()
         this.renderLabels()
       }
@@ -364,7 +364,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         return this.active
       }
   
-      render(renderer, context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
+      render(renderer) {
         // Centre of a row is between the algedonode `body' and the pads, half-way down the algedonode, and at the vertical midpoint of the 2 pads
         /*
           ##
@@ -496,7 +496,6 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       renderer.brassPadPair(row, column, this.active0, this.active1, this.offset, this.isLastRow, this.outputs0, this.outputs1)
     } 
   
-    
   }
   
   class AlgedonodeSetActivator {
@@ -527,36 +526,8 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   
     }
     
-    render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(this.row, this.startColumn, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-  
-  
-      // we want the activator to be above the furthest the top pad can move, start a little to the left of the 
-      // top output wire, and finish at the midpoint of the final algedonode
-      // then other wires come down from it to the top mid of each of the algedonodes
-  
-      let tl = { x: cX - 2 * columnWidth, y: cY + 1.6 * rowHeight }
-  
-      let algCoords = this.algedonodes.map(algedonode => algedonode.getXPos({ columnSpacing, columnWidth, rowSpacing, rowHeight })) 
-  
-      context.beginPath()
-      context.strokeStyle = this.activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
-      context.moveTo(tl.x, tl.y)
-      context.lineTo(tl.x, tl.y - rowHeight / 3.5)
-      context.stroke()
-  
-      context.beginPath()
-      context.strokeStyle = this.active ? coloursCurrent.activated : "black"
-  
-      context.arc(tl.x, tl.y, 2, 0, 2 * Math.PI)
-      context.moveTo(tl.x, tl.y)
-      context.lineTo(algCoords[algCoords.length - 1].x + columnWidth / 2, tl.y)
-      algCoords.forEach(({x, y}) => {
-        context.moveTo(x + columnWidth / 2, tl.y)
-        context.lineTo(x + columnWidth / 2, y - rowHeight / 2)
-      })
-      context.stroke()
-  
+    render(renderer) {
+      renderer.algedonodeSetActivator(this.row, this.startColumn, this.algedonodes, this.activationSource, this.active)  
     }
   }
   
