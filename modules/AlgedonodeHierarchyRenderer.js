@@ -150,6 +150,55 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.stroke()
   }
 
+  algedonode(row, column, active) {
+    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let algTL = { x: cX, y: cY - (0.7 * this.positionInfo.rowHeight) }
+    this.ctx.lineWidth = 1.0
+    if (active) {
+      this.ctx.fillStyle = coloursCurrent.algedonode
+      this.ctx.strokeStyle = coloursCurrent.activated
+      this.ctx.fillRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
+      this.ctx.strokeRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
+    }
+    else { 
+      this.ctx.fillStyle = coloursCurrent.algedonode
+      this.ctx.strokeStyle = coloursCurrent.algedonodeEdge
+      this.ctx.fillRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
+      this.ctx.strokeRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
+    }
+  }
+
+  contactAsInputSection(row, column, position, active) {
+    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+  
+    let x = cX + this.positionInfo.columnWidth
+    let y = cY + position * this.positionInfo.rowHeight
+
+    this.ctx.lineWidth = 1.5
+    this.ctx.strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.beginPath()
+    this.ctx.moveTo(x, y)
+    this.ctx.lineTo(x + this.positionInfo.columnWidth, y)
+    this.ctx.stroke()
+  }
+
+  contactAsContact(row, column, position, active, algedonodeActive) {
+    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+  
+    let x = cX
+    let y = cY + position * this.positionInfo.rowHeight
+
+    context.lineWidth = 1.5
+    context.strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
+    context.beginPath()
+    context.moveTo(x, y)
+    context.lineTo(x - this.positionInfo.columnWidth * 3 / 4, y)
+    context.stroke()
+  }
+
+  brassPadPair(cX, cY) {
+
+  }
 
   // start, and each element of to, are objects { x, y }
   line(start, ...to) {

@@ -178,7 +178,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.algedonodeActivators.forEach(aa => { aa.render(context, this.positionInfo) })
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) } )
-        this.rows.forEach( r => { r.forEach( c => { c.render(context, this.positionInfo) } )} )
+        this.rows.forEach( r => { r.forEach( c => { c.render(this.renderer, context, this.positionInfo) } )} )
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.render(this.renderer) ) } )
       }
   
@@ -285,21 +285,14 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   
       renderMetasystemTo(context) {
         this.renderMetasystemVisibleComponentsTo(context) // dial + outputs, algedonode, brass pads, strips, lights
+        this.renderer.metasystemBlackBox()
         this.renderLabels()
       }
   
-      renderMetasystemVisibleComponentsTo(context) {
+      renderMetasystemVisibleComponentsTo() {
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) })
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.renderAsMetaSystem(this.renderer) ) } )
-      
-        context.fillStyle = "black"
-        let x1 = this.positionInfo.columnSpacing
-        let y1 = this.positionInfo.rowSpacing - this.positionInfo.rowHeight * 1.5
-        let x2 = this.positionInfo.columnSpacing * 10
-        let y2 = this.positionInfo.rowSpacing * 4.5
-        context.fillRect(x1, y1, x2 - x1, y2 - y1)
-        
       }
   }
   
@@ -371,7 +364,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         return this.active
       }
   
-      render(context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
+      render(renderer, context, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
         // Centre of a row is between the algedonode `body' and the pads, half-way down the algedonode, and at the vertical midpoint of the 2 pads
         /*
           ##
@@ -382,36 +375,21 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
           ## 
           ##
         */
-        
   
         let {cX, cY} = elementCentre(this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
   
-        let algTL = { x: cX, y: cY - (0.7 * rowHeight) }
-  
         this.brassPadPair.render(context, cX, cY, { columnSpacing, columnWidth, rowSpacing, rowHeight })
   
-        context.lineWidth = 1.0
-        if (this.active) {
-          context.fillStyle = coloursCurrent.algedonode
-          context.strokeStyle = coloursCurrent.activated
-          context.fillRect(algTL.x, algTL.y, columnWidth, rowHeight * 1.4)
-          context.strokeRect(algTL.x, algTL.y, columnWidth, rowHeight * 1.4)
-        }
-        else { 
-          context.fillStyle = coloursCurrent.algedonode
-          context.strokeStyle = coloursCurrent.algedonodeEdge
-          context.fillRect(algTL.x, algTL.y, columnWidth, rowHeight * 1.4)
-          context.strokeRect(algTL.x, algTL.y, columnWidth, rowHeight * 1.4)
-        }
+        renderer.algedonode(this.row, this.column, this.active)
   
   
   
         this.contacts.forEach(contact => {
-          contact.renderAsInputSection(context, this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
+          contact.renderAsInputSection(renderer, this.row, this.column)
         })
   
         this.contacts.forEach(contact => {
-          contact.renderAsContact(context, this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
+          contact.renderAsContact(renderer, this.row, this.column)
         })
       }
   
@@ -464,33 +442,12 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       }
     }
   
-    renderAsInputSection(context, row, column,  { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-  
-      let x = cX + columnWidth
-      let y = cY + this.position * rowHeight
-  
-      context.lineWidth = 1.5
-      context.strokeStyle = this.active ? coloursCurrent.activated : coloursCurrent.dialOutput
-      context.beginPath()
-      context.moveTo(x, y)
-      context.lineTo(x + columnWidth, y)
-      context.stroke()
-  
+    renderAsInputSection(renderer, row, column) {
+      renderer.contactAsInputSection(row, column, this.position, this.active)
     }
   
-    renderAsContact(context, row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      let {cX, cY} = elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-  
-      let x = cX
-      let y = cY + this.position * rowHeight
-  
-      context.lineWidth = 1.5
-      context.strokeStyle = this.active && this.algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
-      context.beginPath()
-      context.moveTo(x, y)
-      context.lineTo(x - columnWidth * 3 / 4, y)
-      context.stroke()
+    renderAsContact(renderer, row, column) {
+      renderer.contactAsContact(row, column, this.position, this.active, this.algedonodeActive)
     }
   }
   
