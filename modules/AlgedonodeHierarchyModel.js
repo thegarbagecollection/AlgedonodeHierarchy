@@ -1,14 +1,3 @@
-
-// TODO: move this to AH Renderer and delete
-function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-    // offsets are the starting point
-    let rowOffset = 100
-    let columnOffset = 100
-    return {
-      cX: columnOffset + (column * columnSpacing),
-      cY: rowOffset + (row * rowSpacing)
-    }
-  }
   
   // takes an array [x1,...,xn], returns the nested arrays [[x_1,...,x_p],[x_{p+1},...,x_{2p}],...]
   // where p is partitionSize
@@ -52,7 +41,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
           }
   
           for (let j = 0; j < 8; j++) {
-            this.lights[j] = [new Light("B", 0.5, j), new Light("A", -0.5, j)]
+            this.lights[j] = [new Light(LightType.B, j), new Light(LightType.A, j)]
   
             let brassPadPair = []
             for (let i = 0; i < 4; i++) {
@@ -256,7 +245,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
             acc[lightNum] = { aCount: 0, bCount: 0}
           }
           let {aCount, bCount} = acc[lightNum]
-          acc[lightNum] = { aCount: (aOrB === "A" ? aCount + 1 : aCount), bCount: (aOrB === "B" ? bCount + 1 : bCount)}
+          acc[lightNum] = { aCount: (aOrB === LightType.A ? aCount + 1 : aCount), bCount: (aOrB === LightType.B ? bCount + 1 : bCount)}
           return acc
         }, [])
   
@@ -309,6 +298,14 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.contactCount = 0
       }
   
+      getColumn() {
+        return this.column
+      }
+
+      getRow() {
+        return this.row
+      }
+
       // position is either 0.5 for on, or -0.5 for off
       setSingleContact(input) {
         let c = new Contact(contactsCurrent[1][this.column], this.brassPadPair)
@@ -378,8 +375,6 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
           ##
         */
   
-  
-  
         this.brassPadPair.render(renderer, this.row, this.column)
   
         renderer.algedonode(this.row, this.column, this.active)
@@ -393,12 +388,6 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
         this.contacts.forEach(contact => {
           contact.renderAsContact(renderer, this.row, this.column)
         })
-      }
-  
-  
-      getXPos({ columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-        let {cX, cY} = elementCentre(this.row, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-        return { x: cX, y: cY }
       }
   
       setNewContactPositions() {
@@ -480,11 +469,11 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
   
       if (contactPosition >= this.offset / 2) {
         this.active1 = true
-        this.outputs1.activate("algedonode")
+        this.outputs1.activate(ActivationSource.ALGEDONODE)
       }
       else {
         this.active0 = true
-        this.outputs0.activate("algedonode")
+        this.outputs0.activate(ActivationSource.ALGEDONODE)
       }
   
     }
@@ -511,20 +500,20 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       this.startColumn = startColumn
       this.row = row
       this.endColumn = endColumn
-      this.activationSource = ""
+      this.activationSource = ActivationSource.NONE
       this.representativePartitionParent = representativePartitionParent
     }
   
     clear() {
       this.active = false
       this.algedonodes.forEach( algedonode => algedonode.clear() )
-      this.activationSource = ""
+      this.activationSource = ActivationSource.NONE
     }
   
     activate(source) {
       // Need a bit of logic here - a dial output will only activate this
       // group if the parent group of algedonodes is currently activated
-      if ((source === "dialOutput" && this.representativePartitionParent.isActive()) || source === "algedonode") {
+      if ((source === ActivationSource.DIAL_OUTPUT && this.representativePartitionParent.isActive()) || source === ActivationSource.ALGEDONODE) {
         this.active = true
         this.activationSource = source
         this.algedonodes.forEach( algedonode => algedonode.activate() )
@@ -598,7 +587,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     activate() {
       this.active = true
       this.contacts.forEach(contact => {
-       contact.activate(this.value < 9 ? "algedonode" : "dialOutput")
+       contact.activate(this.value < 9 ? ActivationSource.ALGEDONODE : ActivationSource.DIAL_OUTPUT)
       })
     }
     clear() {
@@ -631,19 +620,26 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     }
   }
   
+  const LightType = {
+    A: "A",
+    B: "B"
+  }
   
-  
-  
+  const ActivationSource = {
+    NONE: "NONE",
+    DIAL_OUTPUT: "DIAL_OUTPUT",
+    ALGEDONODE: "ALGEDONODE"
+  }
+
   class Light { 
     // rowOffset is -0.5 if the light is meant to indicate a 0 output from row 3, and 0.5 if meant to indicate a 1 output
     // not linking it in with the colour - might want to change them!
-    constructor(aOrB, rowOffset, column) {
+    constructor(aOrB, column) {
       this.aOrB = aOrB
       this.active = false
-      this.rowOffset = rowOffset
       this.column = column
       this.parent = null
-      this.activationSource = ""
+      this.activationSource = ActivationSource.NONE
     }
     setParent(parent) {
       this.parent = parent
@@ -651,25 +647,22 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     getColumn() {
       return this.column
     }
-    getRowOffset() {
-      return this.rowOffset
-    }
     activate(source) {
-      if ((source === "dialOutput" && this.parent.isActive()) || source === "algedonode") {
+      if ((source === ActivationSource.DIAL_OUTPUT && this.parent.isActive()) || source === ActivationSource.ALGEDONODE) {
         this.active = true
         this.activationSource = source
       }
     }
     clear() {
       this.active = false
-      this.activationSource = ""
+      this.activationSource = ActivationSource.NONE
     }
     render(renderer) {
-      renderer.light(this, this.column, this.rowOffset, this.aOrB, this.active, this.activationSource)
+      renderer.light(this, this.column, this.aOrB, this.active, this.activationSource)
     }
  
     renderAsMetaSystem(renderer) {
-      renderer.metasystemLight(this.column, this.rowOffset, this.aOrB, this.active)
+      renderer.metasystemLight(this.column, this.aOrB, this.active)
     }
   
     isActive() {

@@ -42,7 +42,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   dial(row, textValue) {
-    let { cX, cY } = elementCentre(row, 9, this.positionInfo)
+    let { cX, cY } =this.elementCentre(row, 9, this.positionInfo)
   
     this.ctx.lineWidth = 1.0
     this.ctx.strokeStyle = "black"
@@ -61,7 +61,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   dialOutput(row, active, outputNum) {
-    let {cX, cY} = elementCentre(row, 9, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, 9, this.positionInfo)
   
     // We have 2x rowHeight space to work with - rowHeight is radius of parent dial
     // Use 1.5x rowHeight, 5 connections each side, 10 connections total
@@ -81,7 +81,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   strip(column, offset) {
-    let { cX, cY } = elementCentre(0, column, this.positionInfo)
+    let { cX, cY } =this.elementCentre(0, column, this.positionInfo)
     // let stripTL = { x: cX - columnWidth, y: cY - (5 * rowHeight / 4) + (this.offset * rowHeight / 2)}
     let stripTL = { x: cX - this.positionInfo.columnWidth, y: cY - 2.5 * this.positionInfo.rowHeight + (offset * this.positionInfo.rowHeight / 2)}
     let height = 3 * this.positionInfo.rowSpacing + 5 * this.positionInfo.rowHeight
@@ -94,16 +94,17 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.strokeRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
   }
 
-  light(theLight, column, rowOffset, aOrB, active, activationSource) {
-    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+  light(theLight, column, aOrB, active, activationSource) {
+    let {cX, cY} = this.elementCentre(4.25, column, this.positionInfo)
+    let rowOffset = this.lightTypeToOffset(aOrB)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
     this.lightConnection(theLight, column, rowOffset, aOrB, active, activationSource)
 
     this.ctx.lineWidth = 1.0
-    let onColour = aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-    let offColour = aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+    let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+    let offColour = aOrB === LightType.A ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
 
     this.ctx.fillStyle = active ? onColour : offColour
     this.ctx.strokeStyle = active ? onColour : offColour
@@ -126,7 +127,7 @@ class AlgedonodeHierarchyRenderer {
     
     this.ctx.beginPath()
     this.ctx.lineWidth = 1.5
-    this.ctx.strokeStyle = activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
     this.ctx.moveTo(x1, y1)
     this.ctx.lineTo(x1, y1 + this.positionInfo.rowHeight / 4)
     this.ctx.lineTo(x1 + this.positionInfo.columnWidth / 4, y1 + this.positionInfo.rowHeight / 4)
@@ -134,13 +135,13 @@ class AlgedonodeHierarchyRenderer {
   }
 
   metasystemLight(column, rowOffset, aOrB, active) {
-    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
     this.ctx.lineWidth = 1.0
-    let onColour = aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-    let offColour = aOrB === "A" ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+    let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+    let offColour = aOrB ===LightType.B ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
 
     this.ctx.fillStyle = active ? onColour : offColour
     this.ctx.strokeStyle = active ? onColour : offColour
@@ -151,7 +152,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   algedonode(row, column, active) {
-    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let algTL = { x: cX, y: cY - (0.7 * this.positionInfo.rowHeight) }
     this.ctx.lineWidth = 1.0
     if (active) {
@@ -169,7 +170,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   contactAsInputSection(row, column, position, active) {
-    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
   
     let x = cX + this.positionInfo.columnWidth
     let y = cY + position * this.positionInfo.rowHeight
@@ -183,7 +184,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   contactAsContact(row, column, position, active, algedonodeActive) {
-    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
   
     let x = cX
     let y = cY + position * this.positionInfo.rowHeight
@@ -198,7 +199,7 @@ class AlgedonodeHierarchyRenderer {
 
   brassPadPair(row, column, active0, active1, offset, attachedLight, outputs0, outputs1) {
     // (cX, cY) is centre of algedonode-padpair group
-    let {cX, cY} = elementCentre(row, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let lx = cX - this.positionInfo.columnWidth
     let yOffset = offset * this.positionInfo.rowHeight / 2
     let pad0TL = { x: lx, y: cY - this.positionInfo.rowHeight + yOffset}
@@ -264,7 +265,7 @@ class AlgedonodeHierarchyRenderer {
   }
 
   algedonodeSetActivator(row, startColumn, algedonodes, activationSource, active) {
-    let {cX, cY} = elementCentre(row, startColumn, this.positionInfo)
+    let {cX, cY} =this.elementCentre(row, startColumn, this.positionInfo)
   
   
     // we want the activator to be above the furthest the top pad can move, start a little to the left of the 
@@ -273,10 +274,11 @@ class AlgedonodeHierarchyRenderer {
 
     let tl = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
 
-    let algCoords = algedonodes.map(algedonode => algedonode.getXPos(this.positionInfo)) 
+    // let algCoords = algedonodes.map(algedonode => algedonode.getXPos(this.positionInfo)) 
+    let algCoords = algedonodes.map(algedonode => this.getXPos(algedonode.getRow(), algedonode.getColumn())) 
 
     this.ctx.beginPath()
-    this.ctx.strokeStyle = activationSource === "dialOutput" ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.ctx.strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
     this.ctx.moveTo(tl.x, tl.y)
     this.ctx.lineTo(tl.x, tl.y - this.positionInfo.rowHeight / 3.5)
     this.ctx.stroke()
@@ -294,6 +296,11 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.stroke()
   }
 
+  getXPos(row, column) {
+    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
+    return { x: cX, y: cY }
+  }
+  
   // start, and each element of to, are objects { x, y }
   line(start, ...to) {
     this.ctx.beginPath()
@@ -313,9 +320,9 @@ class AlgedonodeHierarchyRenderer {
   }
 
   lightWireJoinCoords(light) {
-    let rowOffset = light.getRowOffset()
+    let rowOffset = this.lightTypeToOffset(light.getAorB())
     let column = light.getColumn()
-    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
@@ -325,8 +332,12 @@ class AlgedonodeHierarchyRenderer {
     }
   }
 
+  lightTypeToOffset(lightType) {
+      return lightType === LightType.A ? -0.5 : 0.5
+  }
+
   lightConnectionCoords(column, rowOffset, aOrB) {
-    let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
+    let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
     let y = cY + this.positionInfo.rowHeight * rowOffset
     return {
       x: cX - (aOrB === "B" ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
