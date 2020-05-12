@@ -230,10 +230,10 @@ function clear(context) {
 function newRender() {
   clear(context)
   if (metasystemMode) {
-    c.renderMetasystemTo(context)
+    c.renderMetasystem()
   }
   else {
-    c.renderTo(context)
+    c.render()
   }
 }
 
@@ -520,5 +520,5 @@ window.onload = () => {
   c.clear()
   c.propagateDialValues()
   plotNewPoint()
-  c.renderTo(context)
+  c.render(context)
 }

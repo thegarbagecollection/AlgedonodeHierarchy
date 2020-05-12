@@ -20,12 +20,6 @@
   class Hierarchy {
       // takes an AlgedonodeHierarchyRenderer
       constructor(renderer) {
-          this.positionInfo = {
-            columnSpacing: 50, // distance between columns
-            columnWidth: 10, // width of a single column
-            rowSpacing: 100, // distance between rows
-            rowHeight: 30, // height of a single row
-          }
           this.renderer = renderer
           this.dials = []
           this.rows = []
@@ -156,8 +150,8 @@
         this.dials.forEach(dial => { dial.clear() })
       }
   
-      renderTo() {
-        this.renderComponentsTo() // dial + outputs, algedonode, brass pads, strips, lights
+      render() {
+        this.renderComponents() // dial + outputs, algedonode, brass pads, strips, lights
         this.renderLabels()
       }
   
@@ -165,7 +159,7 @@
         this.renderer.rowAndColumnLabels()
       }
   
-      renderComponentsTo() {
+      renderComponents() {
         this.algedonodeActivators.forEach(aa => { aa.render(this.renderer) })
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) } )
@@ -274,13 +268,13 @@
         this.rows.forEach(algedonodeRow => algedonodeRow.forEach(algedonode => algedonode.setNewContactPositions()))
       }
   
-      renderMetasystemTo() {
-        this.renderMetasystemVisibleComponentsTo() // dial + outputs, algedonode, brass pads, strips, lights
+      renderMetasystem() {
+        this.renderMetasystemVisibleComponents() // dial + outputs, algedonode, brass pads, strips, lights
         this.renderer.metasystemBlackBox()
         this.renderLabels()
       }
   
-      renderMetasystemVisibleComponentsTo() {
+      renderMetasystemVisibleComponents() {
         this.dials.forEach(d => { d.render(this.renderer) })
         this.strips.forEach(s => { s.render(this.renderer) })
         this.lights.forEach( lightPair => { lightPair.forEach( light => light.renderAsMetaSystem(this.renderer) ) } )
@@ -570,7 +564,6 @@
       })
     }
   
-    // technically this should be 9 and 10!!!
     link9and10(output9, output10) {
       this.dialOutputs[8].link(output9)
       this.dialOutputs[9].link(output10)

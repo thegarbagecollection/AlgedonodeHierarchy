@@ -10,54 +10,31 @@ class AlgedonodeHierarchyRenderer {
   }
 
   rowAndColumnLabels() {
+    let fontSize = this.positionInfo.columnWidth * 2
     for (let i = 0; i < 8; i++) {
       let { cX, cY } = this.elementCentre(4.65, i, this.positionInfo)
-      this.ctx.beginPath()
-      this.ctx.font = "" + this.positionInfo.columnWidth * 2 + "px Arial"
-      this.ctx.textAlign = "center"
-      this.ctx.textBaseline = "middle"
-      this.ctx.fillStyle = "black"
-      this.ctx.fillText(`${i + 1}`, cX, cY)
-      this.ctx.stroke()
+      this.label(`${i + 1}`, cX, cY, fontSize)
     }
-
     let { cX, cY } = this.elementCentre(4.25, -1, this.positionInfo)
-    this.ctx.beginPath()
-    this.ctx.font = "" + this.positionInfo.columnWidth * 2 + "px Arial"
-    this.ctx.textAlign = "center"
-    this.ctx.textBaseline = "middle"
-    this.ctx.fillStyle = "black"
-    this.ctx.fillText(`A`, cX, cY - 0.4 * this.positionInfo.rowHeight)
-    this.ctx.fillText(`B`, cX, cY + 0.5 * this.positionInfo.rowHeight)
-    this.ctx.stroke()
+    this.label("A", cX, cY - 0.4 * this.positionInfo.rowHeight, fontSize)
+    this.label("B", cX, cY + 0.5 * this.positionInfo.rowHeight, fontSize)
   }
 
+
   metasystemBlackBox() {
-    this.ctx.fillStyle = "black"
     let x1 = this.positionInfo.columnSpacing
     let y1 = this.positionInfo.rowSpacing - this.positionInfo.rowHeight * 1.5
     let x2 = this.positionInfo.columnSpacing * 10
     let y2 = this.positionInfo.rowSpacing * 4.5
-    this.ctx.fillRect(x1, y1, x2 - x1, y2 - y1)
+    this.rectangle({ lineWidth: 0, strokeStyle: null, fillStyle: "black"}, x1, y1, x2 - x1, y2 - y1)
   }
 
   dial(row, textValue) {
-    let { cX, cY } =this.elementCentre(row, 9, this.positionInfo)
+    let { cX, cY } = this.elementCentre(row, 9, this.positionInfo)
   
-    this.ctx.lineWidth = 1.0
-    this.ctx.strokeStyle = "black"
-    
-    this.ctx.beginPath() 
-    this.ctx.arc(cX, cY, this.positionInfo.rowHeight, 0, 2 * Math.PI)
-    this.ctx.fillStyle = "white"
-    this.ctx.fill()
-    this.ctx.stroke()
+    this.circle({ lineWidth: 1, strokeStyle: "black", fillStyle: "white"}, cX, cY, this.positionInfo.rowHeight)
 
-    this.ctx.textAlign = "center"
-    this.ctx.textBaseline = "middle"
-    this.ctx.font = "40px arial"
-    this.ctx.fillStyle = "black"
-    this.ctx.fillText(textValue, cX, cY)
+    this.label(textValue, cX, cY, 40)
   }
 
   dialOutput(row, active, outputNum) {
@@ -72,12 +49,11 @@ class AlgedonodeHierarchyRenderer {
 
     let contactY = firstContactY + outputNum * gapBetweenOutputs
 
-    this.ctx.lineWidth = 1.3
-    this.ctx.strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
-    this.ctx.beginPath()
-    this.ctx.moveTo(cX, contactY)
-    this.ctx.lineTo(cX - 2 * this.positionInfo.rowHeight, contactY)
-    this.ctx.stroke()
+    let lineWidth = 1.3
+    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let start = {x: cX, y: contactY }
+    let end = { x: cX - 2 * this.positionInfo.rowHeight, y: contactY}
+    this.line({lineWidth, strokeStyle}, start, end)
   }
 
   strip(column, offset) {
@@ -86,12 +62,8 @@ class AlgedonodeHierarchyRenderer {
     let stripTL = { x: cX - this.positionInfo.columnWidth, y: cY - 2.5 * this.positionInfo.rowHeight + (offset * this.positionInfo.rowHeight / 2)}
     let height = 3 * this.positionInfo.rowSpacing + 5 * this.positionInfo.rowHeight
 
-    this.ctx.lineWidth = 1.0
-    this.ctx.strokeStyle = coloursCurrent.strip
-    this.ctx.fillStyle = coloursCurrent.strip
-    this.ctx.clearRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
-    this.ctx.fillRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
-    this.ctx.strokeRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
+    this.rectangle({lineWidth: 1.0, strokeStyle: coloursCurrent.strip, fillStyle: coloursCurrent.strip}, 
+        stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
   }
 
   light(theLight, column, aOrB, active, activationSource) {
@@ -102,85 +74,62 @@ class AlgedonodeHierarchyRenderer {
 
     this.lightConnection(theLight, column, rowOffset, aOrB, active, activationSource)
 
-    this.ctx.lineWidth = 1.0
     let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
     let offColour = aOrB === LightType.A ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
 
-    this.ctx.fillStyle = active ? onColour : offColour
-    this.ctx.strokeStyle = active ? onColour : offColour
-    this.ctx.beginPath()
-    this.ctx.arc(cX, y, radius, 0, 2 * Math.PI)
-    this.ctx.fill()
-    this.ctx.stroke()
+    let colour = active ? onColour : offColour
+
+    this.circle({ lineWidth: 1, strokeStyle: colour, fillStyle: colour}, cX, y, radius)
   }
 
   lightConnection(theLight, column, rowOffset, aOrB, active, activationSource) {
-    this.ctx.strokeStyle = active ? coloursCurrent.activated : "black"
-    var {x:x1, y:y1} = this.lightConnectionCoords(column, rowOffset, aOrB)
-    this.ctx.beginPath()
-    this.ctx.moveTo(x1, y1)
-    this.ctx.arc(x1, y1, 2, 0 , 2 * Math.PI)
+    let lineWidth = 1.5
+    let strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
 
-    var {x:x2, y:y2} = this.lightWireJoinCoords(theLight)
-    this.ctx.lineTo(x2, y2)    
-    this.ctx.stroke()
-    
-    this.ctx.beginPath()
-    this.ctx.lineWidth = 1.5
-    this.ctx.strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
-    this.ctx.moveTo(x1, y1)
-    this.ctx.lineTo(x1, y1 + this.positionInfo.rowHeight / 4)
-    this.ctx.lineTo(x1 + this.positionInfo.columnWidth / 4, y1 + this.positionInfo.rowHeight / 4)
-    this.ctx.stroke()
+    var {x, y} = this.lightConnectionCoords(column, rowOffset, aOrB)
+    this.line({lineWidth, strokeStyle}, 
+        {x, y}, 
+        {x:x, y:y + this.positionInfo.rowHeight / 4}, 
+        {x:x + this.positionInfo.columnWidth / 4, y:y + this.positionInfo.rowHeight / 4 })
+
+    strokeStyle = active ? coloursCurrent.activated : "black"
+    var wjc = this.lightWireJoinCoords(theLight)
+    this.line({lineWidth, strokeStyle}, {x, y}, wjc)
+    this.circle({lineWidth, strokeStyle, fillStyle: strokeStyle}, x, y, 2)
   }
 
-  metasystemLight(column, rowOffset, aOrB, active) {
-    let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
+  metasystemLight(column, aOrB, active) {
+    let {cX, cY} = this.elementCentre(4.25, column, this.positionInfo)
+    let rowOffset = this.lightTypeToOffset(aOrB)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
-    this.ctx.lineWidth = 1.0
     let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-    let offColour = aOrB ===LightType.B ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+    let offColour = aOrB === LightType.A ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
 
-    this.ctx.fillStyle = active ? onColour : offColour
-    this.ctx.strokeStyle = active ? onColour : offColour
-    this.ctx.beginPath()
-    this.ctx.arc(cX, y, radius, 0, 2 * Math.PI)
-    this.ctx.fill()
-    this.ctx.stroke()
+    let colour = active ? onColour : offColour
+
+    this.circle({ lineWidth: 1, strokeStyle: colour, fillStyle: colour}, cX, y, radius)
   }
 
   algedonode(row, column, active) {
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let algTL = { x: cX, y: cY - (0.7 * this.positionInfo.rowHeight) }
-    this.ctx.lineWidth = 1.0
-    if (active) {
-      this.ctx.fillStyle = coloursCurrent.algedonode
-      this.ctx.strokeStyle = coloursCurrent.activated
-      this.ctx.fillRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
-      this.ctx.strokeRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
-    }
-    else { 
-      this.ctx.fillStyle = coloursCurrent.algedonode
-      this.ctx.strokeStyle = coloursCurrent.algedonodeEdge
-      this.ctx.fillRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
-      this.ctx.strokeRect(algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
-    }
+    let fillStyle = coloursCurrent.algedonode
+    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.algedonodeEdge
+    let lineWidth = 1.0
+    this.rectangle({lineWidth, strokeStyle, fillStyle}, algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
   }
 
   contactAsInputSection(row, column, position, active) {
-    let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
+    let {cX, cY} = this.elementCentre(row, column, this.positionInfo)
   
     let x = cX + this.positionInfo.columnWidth
     let y = cY + position * this.positionInfo.rowHeight
 
-    this.ctx.lineWidth = 1.5
-    this.ctx.strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
-    this.ctx.beginPath()
-    this.ctx.moveTo(x, y)
-    this.ctx.lineTo(x + this.positionInfo.columnWidth, y)
-    this.ctx.stroke()
+    let lineWidth = 1.5
+    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.line({ lineWidth, strokeStyle }, {x, y}, {x: x + this.positionInfo.columnWidth , y})
   }
 
   contactAsContact(row, column, position, active, algedonodeActive) {
@@ -189,12 +138,9 @@ class AlgedonodeHierarchyRenderer {
     let x = cX
     let y = cY + position * this.positionInfo.rowHeight
 
-    this.ctx.lineWidth = 1.5
-    this.ctx.strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
-    this.ctx.beginPath()
-    this.ctx.moveTo(x, y)
-    this.ctx.lineTo(x - this.positionInfo.columnWidth * 3 / 4, y)
-    this.ctx.stroke()
+    let lineWidth = 1.5
+    let strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.line({lineWidth, strokeStyle}, {x, y}, {x: x - this.positionInfo.columnWidth * 3 / 4, y} )
   }
 
   brassPadPair(row, column, active0, active1, offset, attachedLight, outputs0, outputs1) {
@@ -202,111 +148,100 @@ class AlgedonodeHierarchyRenderer {
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let lx = cX - this.positionInfo.columnWidth
     let yOffset = offset * this.positionInfo.rowHeight / 2
+
     let pad0TL = { x: lx, y: cY - this.positionInfo.rowHeight + yOffset}
     let pad1TL = { x: lx, y: cY + yOffset}
 
-    this.ctx.lineWidth = 1.0
+    let padTL = [pad0TL, pad1TL]
+    let active = [active0, active1]
+    // let outputs = [outputs0, outputs1]
 
-    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
-    this.ctx.fillStyle = coloursCurrent.brassPad
-    this.ctx.fillRect(pad0TL.x, pad0TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
-    this.ctx.strokeRect(pad0TL.x, pad0TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
-    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : coloursCurrent.brassPadEdge
-    this.ctx.fillStyle = coloursCurrent.brassPad
-    this.ctx.fillRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
-    this.ctx.strokeRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+    let lineWidth = 1
+    let fillStyle = coloursCurrent.brassPad
+
+    for (let i = 0; i < 2; i++) {
+        let strokeStyle = active[i] ? coloursCurrent.activated : coloursCurrent.brassPadEdge
+        this.rectangle({lineWidth, strokeStyle, fillStyle}, padTL[i].x, padTL[i].y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
+    }
 
     if (attachedLight) {
-        this.lightOutputWire(attachedLight, cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1)
+        this.lightOutputWire(attachedLight, padTL, active)
     }
     else {
-        this.standardOutputWire(cX, cY, pad0TL, pad1TL, active0, active1)
+        this.standardOutputWire(cY, padTL, active)
     }
   }
 
-  lightOutputWire(lightPair, cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1) {
-    var {x, y} = this.lightWireJoinCoords(lightPair[0])
-    // output0 wire
-    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : "black"
-    this.ctx.beginPath()
-    this.ctx.moveTo(pad0TL.x, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, y)
-    this.ctx.stroke()
+  lightOutputWire(lightPair, padTL, active) {
 
-    var {x, y} = this.lightWireJoinCoords(lightPair[1])
-    // output1 wire
-    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : "black"
-    this.ctx.beginPath()
-    this.ctx.moveTo(pad1TL.x, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, y)
-    this.ctx.stroke()
+    let lineWidth = 1
+    let multiplierX = [0.8, 0.4]
+    let multiplierY = [0.1, 0.9]
+
+    for (let i = 0; i < 2; i++) {
+        var {x, y} = this.lightWireJoinCoords(lightPair[i])
+        let strokeStyle = active[i] ? coloursCurrent.activated : "black"
+        let start = { x: padTL[i].x, y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
+        let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth,  y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
+        let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: y }
+        this.line({ lineWidth, strokeStyle }, start, p1, p2)
+    }
+
   }
 
-  standardOutputWire(cX, cY, pad0TL, pad1TL, active0, active1) {
-    // output0 wire
-    this.ctx.strokeStyle = active0 ? coloursCurrent.activated : "black"
-    this.ctx.beginPath()
-    this.ctx.moveTo(pad0TL.x, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, pad0TL.y + 0.1 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, cY - 0.3 * this.positionInfo.rowHeight)
-    this.ctx.arc(pad0TL.x - 0.8 * this.positionInfo.columnWidth, cY - 0.3 * this.positionInfo.rowHeight, 2, 0, 2 * Math.PI)
-    this.ctx.stroke()
+  standardOutputWire(cY, padTL, active) {
+    let lineWidth = 1
 
-    // output1 wire
-    this.ctx.strokeStyle = active1 ? coloursCurrent.activated : "black"
-    this.ctx.beginPath()
-    this.ctx.moveTo(pad1TL.x, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, pad1TL.y + 0.9 * this.positionInfo.rowHeight)
-    this.ctx.lineTo(pad1TL.x - 0.4 * this.positionInfo.columnWidth, cY + 0.3 * this.positionInfo.rowHeight)
-    this.ctx.arc(pad1TL.x - 0.4 * this.positionInfo.columnWidth, cY + 0.3 * this.positionInfo.rowHeight, 2, 0, 2 * Math.PI)
-    this.ctx.stroke()
+    let multiplierX = [0.8, 0.4]
+    let multipliersY = [[0.1, 0.3], [0.9, -0.3]]
+
+    for (let i = 0; i < 2; i++) {
+        let strokeStyle = active[i] ? coloursCurrent.activated : "black"
+        let start = {x: padTL[i].x, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
+        let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
+        let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: cY - multipliersY[i][1] * this.positionInfo.rowHeight}
+        this.line({lineWidth, strokeStyle}, start, p1, p2)
+        this.circle({lineWidth, strokeStyle}, p2.x, p2.y, 2)
+    }
   }
 
   algedonodeSetActivator(row, startColumn, algedonodes, activationSource, active) {
     let {cX, cY} =this.elementCentre(row, startColumn, this.positionInfo)
   
-  
     // we want the activator to be above the furthest the top pad can move, start a little to the left of the 
     // top output wire, and finish at the midpoint of the final algedonode
     // then other wires come down from it to the top mid of each of the algedonodes
 
-    let tl = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
+    let connPoint = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
 
-    // let algCoords = algedonodes.map(algedonode => algedonode.getXPos(this.positionInfo)) 
+    let lineWidth = 1
+    let strokeStyleDialOutput = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
+    this.line({ lineWidth, strokeStyle: strokeStyleDialOutput }, connPoint, {x : connPoint.x, y: connPoint.y - this.positionInfo.rowHeight / 3.5})
+
+    let styleAlgedonodeSet = active ? coloursCurrent.activated : "black"
+    this.circle({ lineWidth, strokeStyle: styleAlgedonodeSet, fillStyle: styleAlgedonodeSet }, connPoint.x, connPoint.y, 2)
+
+
     let algCoords = algedonodes.map(algedonode => this.getXPos(algedonode.getRow(), algedonode.getColumn())) 
+    let lines = []
+    let topLineStart = connPoint
+    let topLineEnd = {x: algCoords[algCoords.length - 1].x + this.positionInfo.columnWidth / 2, y: connPoint.y }
+    lines.push([topLineStart, topLineEnd])
 
-    this.ctx.beginPath()
-    this.ctx.strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
-    this.ctx.moveTo(tl.x, tl.y)
-    this.ctx.lineTo(tl.x, tl.y - this.positionInfo.rowHeight / 3.5)
-    this.ctx.stroke()
-
-    this.ctx.beginPath()
-    this.ctx.strokeStyle = active ? coloursCurrent.activated : "black"
-
-    this.ctx.arc(tl.x, tl.y, 2, 0, 2 * Math.PI)
-    this.ctx.moveTo(tl.x, tl.y)
-    this.ctx.lineTo(algCoords[algCoords.length - 1].x + this.positionInfo.columnWidth / 2, tl.y)
+    
     algCoords.forEach(({x, y}) => {
-      this.ctx.moveTo(x + this.positionInfo.columnWidth / 2, tl.y)
-      this.ctx.lineTo(x + this.positionInfo.columnWidth / 2, y - this.positionInfo.rowHeight / 2)
+        let downLineStart = {x: x + this.positionInfo.columnWidth / 2, y: connPoint.y}
+        let downLineEnd = {x: x + this.positionInfo.columnWidth / 2, y: y - this.positionInfo.rowHeight / 2}
+        lines.push([downLineStart, downLineEnd])
     })
-    this.ctx.stroke()
+
+    this.multiline({ lineWidth, strokeStyle: styleAlgedonodeSet}, lines)
+
   }
 
   getXPos(row, column) {
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     return { x: cX, y: cY }
-  }
-  
-  // start, and each element of to, are objects { x, y }
-  line(start, ...to) {
-    this.ctx.beginPath()
-    this.ctx.moveTo(start.x, start.y)
-    to.forEach((coord) => this.ctx.lineTo(coord.x, coord.y))
-    this.ctx.stroke()
   }
 
   elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, rowHeight }) {
@@ -340,8 +275,51 @@ class AlgedonodeHierarchyRenderer {
     let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
     let y = cY + this.positionInfo.rowHeight * rowOffset
     return {
-      x: cX - (aOrB === "B" ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
+      x: cX - (aOrB === LightType.B ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
       y: y
     }
   }
+
+    // start, and each element of to, are objects { x, y }
+    line({lineWidth, strokeStyle}, start, ...to) {
+        this.ctx.beginPath()
+        this.ctx.lineWidth = lineWidth
+        this.ctx.strokeStyle = strokeStyle
+        this.ctx.moveTo(start.x, start.y)
+        to.forEach((coord) => this.ctx.lineTo(coord.x, coord.y))
+        this.ctx.stroke()
+    }
+
+    multiline({lineWidth, strokeStyle}, lines) {
+        lines.forEach(l => this.line({lineWidth, strokeStyle}, l[0], ...l.slice(1, l.length)))
+    }
+
+    // fillStyle can be left empty to not fill
+    circle({lineWidth, strokeStyle, fillStyle}, x, y, radius) {
+        this.ctx.lineWidth = lineWidth
+        this.ctx.strokeStyle = strokeStyle
+        this.ctx.fillStyle = fillStyle
+        this.ctx.beginPath()
+        this.ctx.arc(x, y, radius, 0 , 2 * Math.PI)
+        if (fillStyle) this.ctx.fill()
+        this.ctx.stroke()
+    }
+
+    rectangle({lineWidth, strokeStyle, fillStyle}, tlx, tly, w, h) {
+        this.ctx.lineWidth = lineWidth
+        this.ctx.strokeStyle = strokeStyle
+        this.ctx.fillStyle = fillStyle
+        if (fillStyle) this.ctx.fillRect(tlx, tly, w, h)
+        if (strokeStyle) this.ctx.strokeRect(tlx, tly, w, h)
+    }
+
+    label(val, x, y, fontSize) {
+        this.ctx.beginPath()
+        this.ctx.font = "" + fontSize + "px Arial"
+        this.ctx.textAlign = "center"
+        this.ctx.textBaseline = "middle"
+        this.ctx.fillStyle = "black"
+        this.ctx.fillText(val, x, y)
+        this.ctx.stroke()
+      }
 }
