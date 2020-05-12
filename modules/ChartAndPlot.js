@@ -19,13 +19,10 @@
   
       this.stateMapping = new Array(10000).fill(null)
   
-  
-  
       let w = plotCtx.canvas.width
       let h = plotCtx.canvas.height
       let barColumnW = w / 11.5
         
-    
       let maxDrawH = 0.8 * h
       this.drawAxes(w, h, barColumnW, maxDrawH)
     }
@@ -40,7 +37,6 @@
           this.stateMapping[s] = null
           this.totalFrequencyData[lightRow]--
           this.totalFrequencyDataCount--
-  
           this.barData[column][lightRow] --
         }
         else {

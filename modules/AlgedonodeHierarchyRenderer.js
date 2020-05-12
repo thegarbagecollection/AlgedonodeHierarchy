@@ -143,7 +143,7 @@ class AlgedonodeHierarchyRenderer {
     this.line({lineWidth, strokeStyle}, {x, y}, {x: x - this.positionInfo.columnWidth * 3 / 4, y} )
   }
 
-  brassPadPair(row, column, active0, active1, offset, attachedLight, outputs0, outputs1) {
+  brassPadPair(row, column, active, offset, attachedLight) {
     // (cX, cY) is centre of algedonode-padpair group
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let lx = cX - this.positionInfo.columnWidth
@@ -153,8 +153,6 @@ class AlgedonodeHierarchyRenderer {
     let pad1TL = { x: lx, y: cY + yOffset}
 
     let padTL = [pad0TL, pad1TL]
-    let active = [active0, active1]
-    // let outputs = [outputs0, outputs1]
 
     let lineWidth = 1
     let fillStyle = coloursCurrent.brassPad

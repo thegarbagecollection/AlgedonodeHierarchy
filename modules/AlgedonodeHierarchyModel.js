@@ -83,7 +83,7 @@
       setLastRowOutputConnections() {
         let r3 = this.rows[3]
         for (let c = 0; c < 8; c++) {
-          r3[c].setOutput(this.lights[c][0], this.lights[c][1])
+          r3[c].setOutput([this.lights[c][0], this.lights[c][1]])
         }
   
       }
@@ -131,7 +131,7 @@
         this.algedonodeActivators.push(algAct1)
   
         for (let c = pStart; c <= pEnd; c++) {
-          this.rows[row][c].setOutput(algAct0, algAct1)
+          this.rows[row][c].setOutput([algAct0, algAct1])
         }
   
         // We also wire up 8 and 9 here for each of rows 0-2
@@ -333,8 +333,8 @@
   
       }
   
-      setOutput(outputs0, outputs1) {
-        this.brassPadPair.setOutput(outputs0, outputs1)
+      setOutput(outputs) {
+        this.brassPadPair.setOutput(outputs)
       }
   
   
@@ -442,47 +442,42 @@
     // -1 <= p < 0: output 0
     // starts with centreline of pad pair at 0
     constructor() {
-      this.active0 = false
-      this.active1 = false
+      this.active = [false, false]
       this.offset = 0
-      this.attachedLight = null // if null, not attached to a light
+      this.attachedLightPair = null // if null, not attached to a light
     }
   
     setAttachedLightPair(lightPair) {
       this.attachedLightPair = lightPair
     }
 
-    setOutput(outputs0, outputs1) {
-      this.outputs0 = outputs0
-      this.outputs1 = outputs1
+    setOutput(outputs) {
+      this.outputs = outputs
     }
     
     activate(contactPosition) {
-      // contact position is fixed, in [-0.5,0.5]
+      // contact position is fixed, in (-0.5,0.5)
       // this should work: if contactPos >= this.offset / 2, then 1 output, else 0 output
   
       if (contactPosition >= this.offset / 2) {
-        this.active1 = true
-        this.outputs1.activate(ActivationSource.ALGEDONODE)
+        this.active[1] = true
+        this.outputs[1].activate(ActivationSource.ALGEDONODE)
       }
       else {
-        this.active0 = true
-        this.outputs0.activate(ActivationSource.ALGEDONODE)
+        this.active[0] = true
+        this.outputs[0].activate(ActivationSource.ALGEDONODE)
       }
-  
     }
   
     clear() {
-      this.active0 = false
-      this.active1 = false
-      this.outputs0.clear() 
-      this.outputs1.clear() 
+      this.active = [false, false]
+      this.outputs.forEach(output => output.clear())
     }
     setOffset(offset) {
-      this.offset= offset
+      this.offset = offset
     }
     render(renderer, row, column) {
-      renderer.brassPadPair(row, column, this.active0, this.active1, this.offset, this.attachedLightPair, this.outputs0, this.outputs1)
+      renderer.brassPadPair(row, column, this.active, this.offset, this.attachedLightPair)
     } 
   
   }
@@ -547,15 +542,13 @@
     getDialOutputsForAlgedonodes() {
       return this.dialOutputs.slice(0, 8)
     }
+
     render(renderer) {
-  
       for (let i = 0; i < 10; i++) {
         this.dialOutputs[i].render(renderer, this.row, i)
       }
   
       renderer.dial(this.row, this.value)
-  
-  
     }
   
     clear() {
@@ -625,8 +618,6 @@
   }
 
   class Light { 
-    // rowOffset is -0.5 if the light is meant to indicate a 0 output from row 3, and 0.5 if meant to indicate a 1 output
-    // not linking it in with the colour - might want to change them!
     constructor(aOrB, column) {
       this.aOrB = aOrB
       this.active = false
