@@ -94,12 +94,12 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.strokeRect(stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
   }
 
-  light(column, rowOffset, aOrB, active, activationSource) {
+  light(theLight, column, rowOffset, aOrB, active, activationSource) {
     let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
-    this.lightConnection(column, rowOffset, aOrB, active, activationSource)
+    this.lightConnection(theLight, column, rowOffset, aOrB, active, activationSource)
 
     this.ctx.lineWidth = 1.0
     let onColour = aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
@@ -113,14 +113,14 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.stroke()
   }
 
-  lightConnection(column, rowOffset, aOrB, active, activationSource) {
+  lightConnection(theLight, column, rowOffset, aOrB, active, activationSource) {
     this.ctx.strokeStyle = active ? coloursCurrent.activated : "black"
     var {x:x1, y:y1} = this.lightConnectionCoords(column, rowOffset, aOrB)
     this.ctx.beginPath()
     this.ctx.moveTo(x1, y1)
     this.ctx.arc(x1, y1, 2, 0 , 2 * Math.PI)
 
-    var {x:x2, y:y2} = this.lightWireJoinCoords(column, rowOffset)
+    var {x:x2, y:y2} = this.lightWireJoinCoords(theLight)
     this.ctx.lineTo(x2, y2)    
     this.ctx.stroke()
     
@@ -196,7 +196,7 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.stroke()
   }
 
-  brassPadPair(row, column, active0, active1, offset, isLastRow, outputs0, outputs1) {
+  brassPadPair(row, column, active0, active1, offset, attachedLight, outputs0, outputs1) {
     // (cX, cY) is centre of algedonode-padpair group
     let {cX, cY} = elementCentre(row, column, this.positionInfo)
     let lx = cX - this.positionInfo.columnWidth
@@ -215,16 +215,16 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.fillRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
     this.ctx.strokeRect(pad1TL.x, pad1TL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
 
-    if (isLastRow) {
-        this.lightOutputWire(cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1)
+    if (attachedLight) {
+        this.lightOutputWire(attachedLight, cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1)
     }
     else {
         this.standardOutputWire(cX, cY, pad0TL, pad1TL, active0, active1)
     }
   }
 
-  lightOutputWire(cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1) {
-    var {x, y} = outputs0.getWireJoinCoords(this.positionInfo)
+  lightOutputWire(lightPair, cX, cY, pad0TL, pad1TL, active0, active1, outputs0, outputs1) {
+    var {x, y} = this.lightWireJoinCoords(lightPair[0])
     // output0 wire
     this.ctx.strokeStyle = active0 ? coloursCurrent.activated : "black"
     this.ctx.beginPath()
@@ -233,7 +233,7 @@ class AlgedonodeHierarchyRenderer {
     this.ctx.lineTo(pad0TL.x - 0.8 * this.positionInfo.columnWidth, y)
     this.ctx.stroke()
 
-    var {x, y} = outputs1.getWireJoinCoords(this.positionInfo)
+    var {x, y} = this.lightWireJoinCoords(lightPair[1])
     // output1 wire
     this.ctx.strokeStyle = active1 ? coloursCurrent.activated : "black"
     this.ctx.beginPath()
@@ -312,7 +312,9 @@ class AlgedonodeHierarchyRenderer {
     }
   }
 
-  lightWireJoinCoords(column, rowOffset) {
+  lightWireJoinCoords(light) {
+    let rowOffset = light.getRowOffset()
+    let column = light.getColumn()
     let {cX, cY} = elementCentre(4.25, column, this.positionInfo)
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset

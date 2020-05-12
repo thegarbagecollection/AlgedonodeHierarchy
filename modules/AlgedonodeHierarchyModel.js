@@ -59,6 +59,8 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
               brassPadPair[i] = this.rows[i][j].brassPadPair
             }
   
+            brassPadPair[3].setAttachedLightPair(this.lights[j])
+
             this.strips[j] = new Strip(brassPadPair, j)
           }
         
@@ -456,13 +458,17 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     // 0 <= p <= 1: output 1
     // -1 <= p < 0: output 0
     // starts with centreline of pad pair at 0
-    constructor(isLastRow) {
+    constructor() {
       this.active0 = false
       this.active1 = false
       this.offset = 0
-      this.isLastRow = isLastRow
+      this.attachedLight = null // if null, not attached to a light
     }
   
+    setAttachedLightPair(lightPair) {
+      this.attachedLightPair = lightPair
+    }
+
     setOutput(outputs0, outputs1) {
       this.outputs0 = outputs0
       this.outputs1 = outputs1
@@ -493,7 +499,7 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       this.offset= offset
     }
     render(renderer, row, column) {
-      renderer.brassPadPair(row, column, this.active0, this.active1, this.offset, this.isLastRow, this.outputs0, this.outputs1)
+      renderer.brassPadPair(row, column, this.active0, this.active1, this.offset, this.attachedLightPair, this.outputs0, this.outputs1)
     } 
   
   }
@@ -642,6 +648,12 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
     setParent(parent) {
       this.parent = parent
     }
+    getColumn() {
+      return this.column
+    }
+    getRowOffset() {
+      return this.rowOffset
+    }
     activate(source) {
       if ((source === "dialOutput" && this.parent.isActive()) || source === "algedonode") {
         this.active = true
@@ -653,25 +665,11 @@ function elementCentre(row, column, { columnSpacing, columnWidth, rowSpacing, ro
       this.activationSource = ""
     }
     render(renderer) {
-      renderer.light(this.column, this.rowOffset, this.aOrB, this.active, this.activationSource)
+      renderer.light(this, this.column, this.rowOffset, this.aOrB, this.active, this.activationSource)
     }
-  
  
     renderAsMetaSystem(renderer) {
       renderer.metasystemLight(this.column, this.rowOffset, this.aOrB, this.active)
-    }
-  
-  
-    getWireJoinCoords({ columnSpacing, columnWidth, rowSpacing, rowHeight }) {
-      console.log("REMOVE THIS")
-      let {cX, cY} = elementCentre(4.25, this.column, { columnSpacing, columnWidth, rowSpacing, rowHeight })
-      let radius = rowHeight / 4
-      let y = cY + rowHeight * this.rowOffset
-  
-      return {
-        x: cX - radius,
-        y
-      }
     }
   
     isActive() {
