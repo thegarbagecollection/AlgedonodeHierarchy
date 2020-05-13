@@ -11,8 +11,8 @@ let context
 
 
 let dataStore = new SmallDataStore(InitialValues.DATA_STORE_SIZE)
-let barChart = new LimitedBarChart()
-
+let barChart
+let statePlot
 
 
 function datapointSliderToStoreSpace(sliderVal) {
@@ -32,24 +32,15 @@ function resizeData(sliderValue) {
   $("#labelDataPoints").text(`Data point store space: ${newStoreSpace}`)
   let removed = dataStore.resize(newStoreSpace)
   if (removed) removed.forEach(pointRemoved => {
-    plotStatePoint(null, pointRemoved)
+    plotNewStatePoint(null, pointRemoved)
     plotNewBarPoint(null, pointRemoved)
   })
 }
 
 function clearPlot() {
-  // also clear the plots!
-  plotCtx.clearRect(0, 0, plotCtx.canvas.width, plotCtx.canvas.height)
-  statesCtx.clearRect(0, 0, statesCtx.canvas.width, statesCtx.canvas.height)
-
   dataStore.clear()
   barChart.clear()
-
-  let wS = statesCtx.canvas.width
-  let hS = statesCtx.canvas.height
-  let drawableLeftS = wS * 0.1
-  let drawableBottomS = hS * 0.9
-  statesAxes(drawableLeftS, drawableBottomS, wS, true)
+  statePlot.clear()
 }
 
 function plotNewPoint() {
@@ -59,7 +50,7 @@ function plotNewPoint() {
     let { column, lightRow } = illum
     let removed = dataStore.enqueue(states, column, lightRow)
 
-    plotStatePoint({ states, column, lightRow}, removed)
+    plotNewStatePoint({ states, column, lightRow}, removed)
 
     plotNewBarPoint( { states, column, lightRow}, removed)
 
@@ -199,7 +190,6 @@ function setButtonsActiveByMetasystemMode() {
   $("#draw-plot").button("option", "disabled", metasystemMode)
   $("#default-contacts").button("option", "disabled", metasystemMode)
   $("#random-contacts").button("option", "disabled", metasystemMode)
-
   $("#metasystem-toggle").button("option", "label", metasystemMode ? "To x-ray view" : "To metasystem view")
 }
 
@@ -317,8 +307,9 @@ $( function() {
   $("#draw-plot").button()
   $("#draw-plot").click((event) => {
       stop()
-      let res = c.fullSimulate()
-      drawPlot(res, plotCtx, statesCtx)
+      let { counts, individualResults } = c.fullSimulate()
+      barChart.fullChart(counts)
+      statePlot.fullPlot(individualResults, statesCtx)
     
   })
 
@@ -515,6 +506,8 @@ window.onload = () => {
     $("#dial" + i).val(1).trigger('change')
     c.setDialValue(i, 1)
   }
+  barChart = new LimitedBarChart(plotCtx)
+  statePlot = new LimitedStatePlot(statesCtx)
   clear(context)
   clearPlot()
   c.clear()
