@@ -114,10 +114,7 @@ function setDialsDirect(states) {
     $("#dial" + i).val(n).trigger('change')
     c.setDialValue(i, n)
   }
-  c.clear()
-  c.propagateDialValues()
-  newRender()
-  plotNewPoint()
+  reset({ freshPlot: false, plotCurrentDialValues: true })
 }
 
 function playSequence() {
@@ -167,22 +164,14 @@ function setRandomContacts() {
   contactsCurrent[2] = randomContactPositions8(2)
   contactsCurrent[4] = randomContactPositions8(4)
   contactsCurrent[8] = randomContactPositions8(8)
-  clearPlot()
   c.setNewContactPositions()
-  c.clear()
-  c.propagateDialValues()
-  newRender()
-  plotNewPoint()
+  reset({freshPlot: true, plotCurrentDialValues: true})
 }
 
 function restoreDefaultContacts() {
   contactsCurrent = { ...contactsDefault }
-  clearPlot()
   c.setNewContactPositions()
-  c.clear()
-  c.propagateDialValues()
-  newRender()
-  plotNewPoint()
+  reset({freshPlot: true, plotCurrentDialValues: true})
 }
 
 
@@ -196,10 +185,7 @@ function setButtonsActiveByMetasystemMode() {
 function metasystemToggle() {
   metasystemMode = !metasystemMode
   setButtonsActiveByMetasystemMode()
-  c.clear()
-  c.propagateDialValues()
-  newRender()
-  plotNewPoint()
+  reset({freshPlot: true, plotCurrentDialValues: true})
 }
 
 function convert100RangeToSliderShift(input) {
@@ -209,16 +195,8 @@ function convert100RangeToSliderShift(input) {
   return -((input - 50) / 50)
 }
 
-function clear(context) {
-  let canvas = context.canvas
-  let w = canvas.width
-  let h = canvas.height
-  context.fillStyle = coloursCurrent.background
-  context.fillRect(0, 0, w, h)
-}
-
 function newRender() {
-  clear(context)
+  c.clearRenderer()
   if (metasystemMode) {
     c.renderMetasystem()
   }
@@ -243,11 +221,8 @@ $( function() {
       value: 50,
       slide: function( event, ui ) {
         let newStripPos = convert100RangeToSliderShift(ui.value)
-        c.clear()
         c.moveStrip(i, newStripPos)
-        c.propagateDialValues()
-        newRender()
-        plotNewPoint()
+        reset({freshPlot: false, plotCurrentDialValues: true})
       }
       });
   }
@@ -281,11 +256,8 @@ $( function() {
       "angleOffset": -100,
       change: function ( v ) {
         let rounded = Math.round(v) // needed because it otherwise updates with intermediate float values...
-        c.clear()
         c.setDialValue(i, rounded)
-        c.propagateDialValues()
-        newRender()
-        plotNewPoint()
+        reset({freshPlot: false, plotCurrentDialValues: true})
       }
   });
   }
@@ -298,10 +270,7 @@ $( function() {
       $("#dial" + i).val(rn).trigger('change')
       c.setDialValue(i, rn)
     }
-    c.clear()
-    c.propagateDialValues()
-    newRender()
-    plotNewPoint()
+    reset({freshPlot: false, plotCurrentDialValues: true})
   })
 
   $("#draw-plot").button()
@@ -491,7 +460,6 @@ $( function() {
 
 window.onload = () => {
   let canvas = document.getElementById("canvas")
-  
   context = canvas.getContext("2d")
 
   let plotCanvas = document.getElementById("plot")
@@ -508,10 +476,15 @@ window.onload = () => {
   }
   barChart = new LimitedBarChart(plotCtx)
   statePlot = new LimitedStatePlot(statesCtx)
-  clear(context)
-  clearPlot()
+  reset({freshPlot: true, plotCurrentDialValues: true})
+}
+
+
+function reset({freshPlot, plotCurrentDialValues}) {
+  c.clearRenderer()
   c.clear()
   c.propagateDialValues()
-  plotNewPoint()
-  c.render(context)
+  newRender()
+  if (freshPlot) clearPlot()
+  if (plotCurrentDialValues) plotNewPoint()
 }

@@ -9,6 +9,14 @@ class AlgedonodeHierarchyRenderer {
     }
   }
 
+  clear() {
+    let canvas = this.ctx.canvas
+    let w = canvas.width
+    let h = canvas.height
+    this.ctx.fillStyle = coloursCurrent.background
+    this.ctx.fillRect(0, 0, w, h)
+  }
+
   rowAndColumnLabels() {
     let fontSize = this.positionInfo.columnWidth * 2
     for (let i = 0; i < 8; i++) {

@@ -143,7 +143,10 @@
   
       }
   
-  
+      clearRenderer() {
+        this.renderer.clear()
+      }
+
       clear() {
         this.rows.forEach(row => { row.forEach(algedonode => { algedonode.clear() } ) } )
         this.lights.forEach(lightPair => { lightPair.forEach( light => light.clear() )  })
