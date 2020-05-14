@@ -2,6 +2,107 @@
 // Also includes a metasystem view - a metasystem by definition can't see any details, and won't
 // have access to every input state at once.
 
+const PlayMode = {
+  STOP: "stop",
+  SEQUENCE: "sequence",
+  RANDOM: "random"
+}
+
+class PlayModeHandler {
+  constructor(structuresToReset) {
+    this.playInterval = null
+    this.playSpeed = 50
+    this.playIndex = 0
+    this.playMode = PlayMode.STOP
+    this.stateSequence = []
+    this.structuresToReset = structuresToReset
+
+    for (let i1 = 1; i1 <= 10; i1++) {
+      for (let i2 = 1; i2 <= 10; i2++) {
+        for (let i3 = 1; i3 <= 10; i3++) {
+          for (let i4 = 1; i4 <= 10; i4++) {
+            this.stateSequence.push([i1, i2, i3, i4])
+          }
+        }
+      }
+    }
+  }
+
+  randomState() {
+    let rState = []
+    for (let i = 0; i < 4; i++) {
+      let rn = rnd(10)
+      rState[i] = rn
+    }
+    return rState
+  }
+
+  createDelayFromSpeed() {
+    // Speed is 1-100
+    // We want speed 100 = 0ms delay
+    //         speed 1 = 1000 ms delay
+    // We also want -x^2 behaviour, or something like that
+    // go with 1000 * (1 - x^1.1), with x in [0, 1]
+    let x = this.playSpeed / 100
+    return 1000 * (1 - Math.pow(x, 1.1))
+  }
+
+  stop() {
+    if (this.playInterval) {
+      window.clearInterval(this.playInterval)
+    }
+    this.playMode = PlayMode.STOP
+  }
+
+
+  setDialsDirect(metasystemMode, states) {
+    for (let i = 0; i < 4; i++) {
+      let n = states[i]
+      $("#dial" + i).val(n).trigger('change')
+      this.structuresToReset.algHierarchy.setDialValue(i, n)
+    }
+    reset({ freshPlot: false, plotCurrentDialValues: true }, this.structuresToReset, metasystemMode)
+  }
+
+  playSequence(metasystemMode) {
+    this.stop()
+    this.playMode = PlayMode.SEQUENCE
+    this.playIndex = 0
+    this.playInterval = window.setInterval(() => {
+      this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
+    }, this.createDelayFromSpeed())
+  }
+
+  newSequenceSpeed(metasystemMode) {
+    this.stop()
+    this.playMode = PlayMode.SEQUENCE
+    this.playInterval = window.setInterval(() => {
+      this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
+    }, this.createDelayFromSpeed())
+  }
+
+  playRandom(metasystemMode) {
+    this.stop()
+    this.playMode = PlayMode.RANDOM
+    this.playInterval = window.setInterval(() => {
+      let rs = this.randomState()
+      this.setDialsDirect(metasystemMode, rs)
+    }, this.createDelayFromSpeed())
+  }
+
+  newRandomSpeed(metasystemMode) {
+    this.playRandom(metasystemMode) // don't need to do anything else
+  }
+
+  setNewPlaySpeed(newSpeed, metasystemMode) {
+    this.playSpeed = newSpeed
+    switch (this.playMode) {
+      case PlayMode.STOP: break;
+      case PlayMode.SEQUENCE: this.newSequenceSpeed(metasystemMode); break;
+      case PlayMode.RANDOM: this.newSequenceSpeed(metasystemMode); break;
+    }
+  }
+}
 
 
 function datapointSliderToStoreSpace(sliderVal) {
@@ -50,91 +151,6 @@ function plotNewPoint(algHierarchy, dataStore, barChart, statePlot) {
 
 
 
-
-let playInterval = null
-let playSpeed = 50
-let playIndex = 0
-
-let playMode = "none"
-
-let stateSequence = []
-for (let i1 = 1; i1 <= 10; i1++) {
-  for (let i2 = 1; i2 <= 10; i2++) {
-    for (let i3 = 1; i3 <= 10; i3++) {
-      for (let i4 = 1; i4 <= 10; i4++) {
-        stateSequence.push([i1, i2, i3, i4])
-      }
-    }
-  }
-}
-
-function randomState() {
-  let rState = []
-  for (let i = 0; i < 4; i++) {
-    let rn = rnd(10)
-    rState[i] = rn
-  }
-  return rState
-}
-
-function createDelayFromSpeed() {
-  // Speed is 1-100
-  // We want speed 100 = 0ms delay
-  //         speed 1 = 1000 ms delay
-  // We also want -x^2 behaviour, or something like that
-  // go with 1000 * (1 - x^1.1), with x in [0, 1]
-  let x = playSpeed / 100
-  return 1000 * (1 - Math.pow(x, 1.1))
-}
-
-function stop() {
-  if (playInterval) {
-    window.clearInterval(playInterval)
-  }
-  playMode = "none"
-}
-
-
-
-function setDialsDirect(structuresToReset, metasystemMode, states) {
-  for (let i = 0; i < 4; i++) {
-    let n = states[i]
-    // $("#dial" + i).val(rn).trigger('change')
-    $("#dial" + i).val(n).trigger('change')
-    structuresToReset.algHierarchy.setDialValue(i, n)
-  }
-  reset({ freshPlot: false, plotCurrentDialValues: true }, structuresToReset, metasystemMode)
-}
-
-function playSequence(structuresToReset, metasystemMode) {
-  stop()
-  playMode = "sequence"
-  playIndex = 0
-  playInterval = window.setInterval(() => {
-    setDialsDirect(structuresToReset, metasystemMode, stateSequence[playIndex++])
-  }, createDelayFromSpeed())
-}
-
-function newSequenceSpeed(structuresToReset, metasystemMode) {
-  stop()
-  playMode = "sequence"
-  playInterval = window.setInterval(() => {
-    setDialsDirect(structuresToReset, metasystemMode, stateSequence[playIndex++])
-  }, createDelayFromSpeed())
-}
-
-function playRandom(structuresToReset, metasystemMode) {
-  stop()
-  playMode = "random"
-  playInterval = window.setInterval(() => {
-    let rs = randomState()
-    setDialsDirect(structuresToReset, metasystemMode, rs)
-  }, createDelayFromSpeed())
-}
-
-function newRandomSpeed(structuresToReset, metasystemMode) {
-  playRandom(structuresToReset, metasystemMode) // don't need to do anything else
-}
 
 
 // returns a list of n random contact positions in [-0.49, 0.49]
@@ -198,7 +214,7 @@ $( function() {
   let metasystemMode = false
   let structuresToReset = initialise(metasystemMode)
   let { algHierarchy, dataStore, barChart, statePlot } = structuresToReset
-  
+  let playModeHandler = new PlayModeHandler(structuresToReset)
 
   for (let i = 0; i < 8; i++) {
     $( "#vslide" + i ).slider({
@@ -221,12 +237,8 @@ $( function() {
     max: 100,
     value: 50,
     slide: function( event, ui ) {
-      playSpeed = ui.value
-      switch (playMode) {
-        case "none": break;
-        case "sequence": newSequenceSpeed(structuresToReset, metasystemMode); break;
-        case "random": newRandomSpeed(structuresToReset, metasystemMode); break;
-      }
+      let playSpeed = ui.value
+      playModeHandler.setNewPlaySpeed(playSpeed, metasystemMode)
     }
   });
 
@@ -269,13 +281,11 @@ $( function() {
       statePlot.fullPlot(individualResults)
   })
 
-  // $("#draw-plot").click()
+  $("#play-sequence").click(() => playModeHandler.playSequence(metasystemMode))
 
-  $("#play-sequence").click(() => playSequence(structuresToReset, metasystemMode))
+  $("#play-random").click(() => playModeHandler.playRandom(metasystemMode))
 
-  $("#play-random").click(() => playRandom(structuresToReset, metasystemMode))
-
-  $("#stop").click(stop)
+  $("#stop").click(() => playModeHandler.stop())
 
   
 
