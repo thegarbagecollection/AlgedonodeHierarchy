@@ -2,105 +2,53 @@
 // Also includes a metasystem view - a metasystem by definition can't see any details, and won't
 // have access to every input state at once.
 
-const PlayMode = {
-  STOP: "stop",
-  SEQUENCE: "sequence",
-  RANDOM: "random"
-}
-
-class PlayModeHandler {
+class ContactsHandler {
   constructor(structuresToReset) {
-    this.playInterval = null
-    this.playSpeed = 50
-    this.playIndex = 0
-    this.playMode = PlayMode.STOP
-    this.stateSequence = []
+    const contactsDefault2 = [-0.49, 0.49]
+    const contactsDefault4 = [-0.49, -0.16, 0.16, 0.49 ]
+    const contactsDefault8 = [-0.49, -0.35, -0.21, -0.07, 0.07, 0.21, 0.35 , 0.49]
+
+    this.contactsDefault = {
+      "1": [-0.49, 0.49, -0.49, 0.49, -0.49, 0.49, -0.49, 0.49],
+      "2": [contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2],
+      "4": [contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4],
+      "8": [contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8],
+    }
+    this.contactsCurrent = { ...this.contactsDefault }
     this.structuresToReset = structuresToReset
-
-    for (let i1 = 1; i1 <= 10; i1++) {
-      for (let i2 = 1; i2 <= 10; i2++) {
-        for (let i3 = 1; i3 <= 10; i3++) {
-          for (let i4 = 1; i4 <= 10; i4++) {
-            this.stateSequence.push([i1, i2, i3, i4])
-          }
-        }
-      }
-    }
   }
 
-  randomState() {
-    let rState = []
-    for (let i = 0; i < 4; i++) {
-      let rn = rnd(10)
-      rState[i] = rn
-    }
-    return rState
+  // returns a list of n random contact positions in [-0.49, 0.49]
+  randomContactPositions(n) {
+    return new Array(n).fill(null).map(_ => Math.random() * 0.98 - 0.49)
   }
 
-  createDelayFromSpeed() {
-    // Speed is 1-100
-    // We want speed 100 = 0ms delay
-    //         speed 1 = 1000 ms delay
-    // We also want -x^2 behaviour, or something like that
-    // go with 1000 * (1 - x^1.1), with x in [0, 1]
-    let x = this.playSpeed / 100
-    return 1000 * (1 - Math.pow(x, 1.1))
+  // returns an 8-list of lists of n random contact positions in [-0.49, 0.49]
+  randomContactPositions8(n) {
+    return new Array(8).fill(null).map(_ => this.randomContactPositions(n))
   }
 
-  stop() {
-    if (this.playInterval) {
-      window.clearInterval(this.playInterval)
-    }
-    this.playMode = PlayMode.STOP
+  setRandomContacts(metasystemMode) {
+    this.contactsCurrent[1] = this.randomContactPositions(8)
+    this.contactsCurrent[2] = this.randomContactPositions8(2)
+    this.contactsCurrent[4] = this.randomContactPositions8(4)
+    this.contactsCurrent[8] = this.randomContactPositions8(8)
+    this.structuresToReset.algHierarchy.setNewContactPositions(this)
+    reset({freshPlot: true, plotCurrentDialValues: true}, this.structuresToReset, metasystemMode)
   }
 
-
-  setDialsDirect(metasystemMode, states) {
-    for (let i = 0; i < 4; i++) {
-      let n = states[i]
-      $("#dial" + i).val(n).trigger('change')
-      this.structuresToReset.algHierarchy.setDialValue(i, n)
-    }
-    reset({ freshPlot: false, plotCurrentDialValues: true }, this.structuresToReset, metasystemMode)
+  restoreDefaultContacts(metasystemMode) {
+    this.contactsCurrent = { ...this.contactsDefault }
+    this.structuresToReset.algHierarchy.setNewContactPositions(this)
+    reset({freshPlot: true, plotCurrentDialValues: true}, this.structuresToReset, metasystemMode)
   }
 
-  playSequence(metasystemMode) {
-    this.stop()
-    this.playMode = PlayMode.SEQUENCE
-    this.playIndex = 0
-    this.playInterval = window.setInterval(() => {
-      this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
-    }, this.createDelayFromSpeed())
+  getContactsCurrent() {
+    return this.contactsCurrent
   }
 
-  newSequenceSpeed(metasystemMode) {
-    this.stop()
-    this.playMode = PlayMode.SEQUENCE
-    this.playInterval = window.setInterval(() => {
-      this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
-    }, this.createDelayFromSpeed())
-  }
-
-  playRandom(metasystemMode) {
-    this.stop()
-    this.playMode = PlayMode.RANDOM
-    this.playInterval = window.setInterval(() => {
-      let rs = this.randomState()
-      this.setDialsDirect(metasystemMode, rs)
-    }, this.createDelayFromSpeed())
-  }
-
-  newRandomSpeed(metasystemMode) {
-    this.playRandom(metasystemMode) // don't need to do anything else
-  }
-
-  setNewPlaySpeed(newSpeed, metasystemMode) {
-    this.playSpeed = newSpeed
-    switch (this.playMode) {
-      case PlayMode.STOP: break;
-      case PlayMode.SEQUENCE: this.newSequenceSpeed(metasystemMode); break;
-      case PlayMode.RANDOM: this.newSequenceSpeed(metasystemMode); break;
-    }
+  getContactsDefault() {
+    return this.contactsDefault
   }
 }
 
@@ -153,33 +101,6 @@ function plotNewPoint(algHierarchy, dataStore, barChart, statePlot) {
 
 
 
-// returns a list of n random contact positions in [-0.49, 0.49]
-function randomContactPositions(n) {
-  return new Array(n).fill(null).map(_ => Math.random() * 0.98 - 0.49)
-}
-
-// returns an 8-list of lists of n random contact positions in [-0.49, 0.49]
-function randomContactPositions8(n) {
-  return new Array(8).fill(null).map(_ => randomContactPositions(n))
-}
-
-
-function setRandomContacts(structuresToReset, metasystemMode) {
-  contactsCurrent[1] = randomContactPositions(8)
-  contactsCurrent[2] = randomContactPositions8(2)
-  contactsCurrent[4] = randomContactPositions8(4)
-  contactsCurrent[8] = randomContactPositions8(8)
-  structuresToReset.algHierarchy.setNewContactPositions()
-  reset({freshPlot: true, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
-}
-
-function restoreDefaultContacts(structuresToReset, metasystemMode) {
-  contactsCurrent = { ...contactsDefault }
-  structuresToReset.algHierarchy.setNewContactPositions()
-  reset({freshPlot: true, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
-}
-
-
 function setButtonsActiveByMetasystemMode(metasystemMode) {
   $("#draw-plot").button("option", "disabled", metasystemMode)
   $("#default-contacts").button("option", "disabled", metasystemMode)
@@ -212,8 +133,8 @@ function rnd(n) {
 
 $( function() {
   let metasystemMode = false
-  let structuresToReset = initialise(metasystemMode)
-  let { algHierarchy, dataStore, barChart, statePlot } = structuresToReset
+  let { algHierarchy, dataStore, barChart, statePlot, contactsHandler } = initialise(metasystemMode)
+  let structuresToReset = { algHierarchy, dataStore, barChart, statePlot }
   let playModeHandler = new PlayModeHandler(structuresToReset)
 
   for (let i = 0; i < 8; i++) {
@@ -443,8 +364,8 @@ $( function() {
 
   $("#reset-plot-and-data").click(() => clearPlot(dataStore, barChart, statePlot))
 
-  $("#random-contacts").button().click(() => setRandomContacts(structuresToReset, metasystemMode))
-  $("#default-contacts").button().click(() => restoreDefaultContacts(structuresToReset, metasystemMode))
+  $("#random-contacts").button().click(() => contactsHandler.setRandomContacts(metasystemMode))
+  $("#default-contacts").button().click(() => contactsHandler.restoreDefaultContacts(metasystemMode))
 
   $("#metasystem-toggle").button().click(() => {
     metasystemMode = !metasystemMode
@@ -468,16 +389,18 @@ function initialise(metasystemMode) {
   let statesCtx = statesCanvas.getContext("2d")
 
   let algHierarchy = new Hierarchy(new AlgedonodeHierarchyRenderer(algCtx))
-  algHierarchy.setupConnections()
   for (let i = 0; i < 4; i++) {
     $("#dial" + i).val(1).trigger('change')
     algHierarchy.setDialValue(i, 1)
   }
   let barChart = new LimitedBarChart(plotCtx)
   let statePlot = new LimitedStatePlot(statesCtx)
-  reset({freshPlot: true, plotCurrentDialValues: true}, {algHierarchy, dataStore, barChart, statePlot}, metasystemMode)
+  let contactsHandler = new ContactsHandler({algHierarchy, dataStore, barChart, statePlot})
 
-  return { algHierarchy, dataStore, barChart, statePlot }
+  algHierarchy.setupConnections(contactsHandler)
+
+  reset({freshPlot: true, plotCurrentDialValues: true}, {algHierarchy, dataStore, barChart, statePlot}, metasystemMode)
+  return { algHierarchy, dataStore, barChart, statePlot, contactsHandler }
 }
 
 

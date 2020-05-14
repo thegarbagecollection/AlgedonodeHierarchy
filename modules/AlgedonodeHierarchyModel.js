@@ -49,21 +49,21 @@
         
       }
       
-      setupConnections() {
-        this.setFirstRowInputConnections()
-        this.setOtherRowInputConnections()
+      setupConnections(contactHandler) {
+        this.setFirstRowInputConnections(contactHandler)
+        this.setOtherRowInputConnections(contactHandler)
         this.setOtherRowOutputConnections()
         this.setLastRowOutputConnections()
       }
   
-      setFirstRowInputConnections() {
+      setFirstRowInputConnections(contactHandler) {
         let d = this.dials[0]
         let r0 = this.rows[0]
         for (let c = 0; c < 8; c++) {
-          r0[c].setSingleContact(d.getDialOutputsForAlgedonodes()[c])
+          r0[c].setSingleContact(d.getDialOutputsForAlgedonodes()[c], contactHandler.getContactsDefault())
         }
       }
-      setOtherRowInputConnections() {
+      setOtherRowInputConnections(contactHandler) {
         for (let r = 1; r < 4; r++) {
           let inputs = this.dials[r].getDialOutputsForAlgedonodes()
           let inPartitionSize = Math.pow(2, r)
@@ -71,7 +71,7 @@
   
           let currInputPartition = 0
           for (let c = 0; c < 8; c++) {
-            this.rows[r][c].setMultiContact(partitionedInputs[currInputPartition])
+            this.rows[r][c].setMultiContact(partitionedInputs[currInputPartition], contactHandler.getContactsDefault())
             currInputPartition++
             if (currInputPartition === partitionedInputs.length) currInputPartition = 0
           }
@@ -267,8 +267,8 @@
       }
   
   
-      setNewContactPositions() {
-        this.rows.forEach(algedonodeRow => algedonodeRow.forEach(algedonode => algedonode.setNewContactPositions()))
+      setNewContactPositions(contactHandler) {
+        this.rows.forEach(algedonodeRow => algedonodeRow.forEach(algedonode => algedonode.setNewContactPositions(contactHandler.getContactsCurrent())))
       }
   
       renderMetasystem() {
@@ -304,8 +304,8 @@
       }
 
       // position is either 0.5 for on, or -0.5 for off
-      setSingleContact(input) {
-        let c = new Contact(contactsCurrent[1][this.column], this.brassPadPair)
+      setSingleContact(input, contactsDefault) {
+        let c = new Contact(contactsDefault[1][this.column], this.brassPadPair)
         this.contacts.push(c)
         input.link(c)
         c.parentActivated()
@@ -314,18 +314,18 @@
   
   
       // Note: ONLY CALLED FROM ROWS 1-3
-      setMultiContact(inputs) {
+      setMultiContact(inputs, contactsDefault) {
         // Multi-contacts are spread out evenly across the double strip, centred on position 0
         // Let's have them contained in a box of width 1 but never touching the edges, so 
         // a full push of the pad in either direction will still contain all the strips
         // 2 contacts: 0.49, -0.49                separation of 1
         // 4 contacts: 0.49, 0.16, -0.16, -0.49   separation of 1/3
         // 8 contacts: 0.49, 0.35, 0.21, 0.07, -0.07, -0.21,-0.35 , -0.49    separation of 1/7
-        if (!contactsCurrent[inputs.length]) throw `setMultiContact got unexpected input size of ${inputs.length}`;
+        if (!contactsDefault[inputs.length]) throw `setMultiContact got unexpected input size of ${inputs.length}`;
   
         this.contactCount = inputs.length
   
-        let cPos = contactsCurrent[this.contactCount][this.column]
+        let cPos = contactsDefault[this.contactCount][this.column]
   
         for (let i = 0; i < this.contactCount; i++) {
           let c = new Contact(cPos[i], this.brassPadPair)
@@ -387,7 +387,7 @@
         })
       }
   
-      setNewContactPositions() {
+      setNewContactPositions(contactsCurrent) {
         if (this.row !== 0) {
           this.contacts.forEach((contact, i) => {
             contact.setPosition(contactsCurrent[this.contactCount][this.column][i])
