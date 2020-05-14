@@ -397,10 +397,10 @@ class LimitedStatePlot {
 
 
 
-function plotNewBarPoint(newPoint, removedPoint) {
-  barChart.changePoint(newPoint, removedPoint)
-}
+// function plotNewBarPoint(newPoint, removedPoint) {
+//   barChart.changePoint(newPoint, removedPoint)
+// }
 
-function plotNewStatePoint(newPoint, removedPoint) {
-  statePlot.plotStatePoint(newPoint, removedPoint)
-}
+// function plotNewStatePoint(newPoint, removedPoint) {
+//   statePlot.plotStatePoint(newPoint, removedPoint)
+// }

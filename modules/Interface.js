@@ -4,17 +4,6 @@
 
 
 
-let c
-
-let context
-
-
-
-let dataStore = new SmallDataStore(InitialValues.DATA_STORE_SIZE)
-let barChart
-let statePlot
-
-
 function datapointSliderToStoreSpace(sliderVal) {
   // minimum of 100, max of 20000 seems reasonable
   // use a low-order polynomial: x^2 on (0, 1]?
@@ -27,32 +16,32 @@ function storeSpaceToDatapointSlider(storeSpace) {
   return 100 * Math.sqrt((storeSpace - 100) / 19900)
 }
 
-function resizeData(sliderValue) {
+function resizeData(sliderValue, dataStore, barChart, statePlot) {
   let newStoreSpace = Math.floor(datapointSliderToStoreSpace(sliderValue))
   $("#labelDataPoints").text(`Data point store space: ${newStoreSpace}`)
   let removed = dataStore.resize(newStoreSpace)
   if (removed) removed.forEach(pointRemoved => {
-    plotNewStatePoint(null, pointRemoved)
-    plotNewBarPoint(null, pointRemoved)
+    statePlot.plotStatePoint(null, pointRemoved)
+    barChart.changePoint(null, pointRemoved)
   })
 }
 
-function clearPlot() {
+function clearPlot(dataStore, barChart, statePlot) {
   dataStore.clear()
   barChart.clear()
   statePlot.clear()
 }
 
-function plotNewPoint() {
-  let states = c.dials.map(dial => dial.getDialValue())
-  let illum = c.getIlluminatedLight()
+function plotNewPoint(algHierarchy, dataStore, barChart, statePlot) {
+  let states = algHierarchy.dials.map(dial => dial.getDialValue())
+  let illum = algHierarchy.getIlluminatedLight()
   if (illum !== null) {
     let { column, lightRow } = illum
     let removed = dataStore.enqueue(states, column, lightRow)
 
-    plotNewStatePoint({ states, column, lightRow}, removed)
+    statePlot.plotStatePoint({ states, column, lightRow}, removed)
 
-    plotNewBarPoint( { states, column, lightRow}, removed)
+    barChart.changePoint( { states, column, lightRow}, removed)
 
   }
 }
@@ -93,7 +82,7 @@ function createDelayFromSpeed() {
   // We want speed 100 = 0ms delay
   //         speed 1 = 1000 ms delay
   // We also want -x^2 behaviour, or something like that
-  // go with 1000 * (1 - x^3), with x in [0, 1]
+  // go with 1000 * (1 - x^1.1), with x in [0, 1]
   let x = playSpeed / 100
   return 1000 * (1 - Math.pow(x, 1.1))
 }
@@ -107,44 +96,44 @@ function stop() {
 
 
 
-function setDialsDirect(states) {
+function setDialsDirect(structuresToReset, metasystemMode, states) {
   for (let i = 0; i < 4; i++) {
     let n = states[i]
     // $("#dial" + i).val(rn).trigger('change')
     $("#dial" + i).val(n).trigger('change')
-    c.setDialValue(i, n)
+    structuresToReset.algHierarchy.setDialValue(i, n)
   }
-  reset({ freshPlot: false, plotCurrentDialValues: true })
+  reset({ freshPlot: false, plotCurrentDialValues: true }, structuresToReset, metasystemMode)
 }
 
-function playSequence() {
+function playSequence(structuresToReset, metasystemMode) {
   stop()
   playMode = "sequence"
   playIndex = 0
   playInterval = window.setInterval(() => {
-    setDialsDirect(stateSequence[playIndex++])
+    setDialsDirect(structuresToReset, metasystemMode, stateSequence[playIndex++])
   }, createDelayFromSpeed())
 }
 
-function newSequenceSpeed() {
+function newSequenceSpeed(structuresToReset, metasystemMode) {
   stop()
   playMode = "sequence"
   playInterval = window.setInterval(() => {
-    setDialsDirect(stateSequence[playIndex++])
+    setDialsDirect(structuresToReset, metasystemMode, stateSequence[playIndex++])
   }, createDelayFromSpeed())
 }
 
-function playRandom() {
+function playRandom(structuresToReset, metasystemMode) {
   stop()
   playMode = "random"
   playInterval = window.setInterval(() => {
     let rs = randomState()
-    setDialsDirect(rs)
+    setDialsDirect(structuresToReset, metasystemMode, rs)
   }, createDelayFromSpeed())
 }
 
-function newRandomSpeed() {
-  playRandom() // don't need to do anything else
+function newRandomSpeed(structuresToReset, metasystemMode) {
+  playRandom(structuresToReset, metasystemMode) // don't need to do anything else
 }
 
 
@@ -159,33 +148,27 @@ function randomContactPositions8(n) {
 }
 
 
-function setRandomContacts() {
+function setRandomContacts(structuresToReset, metasystemMode) {
   contactsCurrent[1] = randomContactPositions(8)
   contactsCurrent[2] = randomContactPositions8(2)
   contactsCurrent[4] = randomContactPositions8(4)
   contactsCurrent[8] = randomContactPositions8(8)
-  c.setNewContactPositions()
-  reset({freshPlot: true, plotCurrentDialValues: true})
+  structuresToReset.algHierarchy.setNewContactPositions()
+  reset({freshPlot: true, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
 }
 
-function restoreDefaultContacts() {
+function restoreDefaultContacts(structuresToReset, metasystemMode) {
   contactsCurrent = { ...contactsDefault }
-  c.setNewContactPositions()
-  reset({freshPlot: true, plotCurrentDialValues: true})
+  structuresToReset.algHierarchy.setNewContactPositions()
+  reset({freshPlot: true, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
 }
 
 
-function setButtonsActiveByMetasystemMode() {
+function setButtonsActiveByMetasystemMode(metasystemMode) {
   $("#draw-plot").button("option", "disabled", metasystemMode)
   $("#default-contacts").button("option", "disabled", metasystemMode)
   $("#random-contacts").button("option", "disabled", metasystemMode)
   $("#metasystem-toggle").button("option", "label", metasystemMode ? "To x-ray view" : "To metasystem view")
-}
-
-function metasystemToggle() {
-  metasystemMode = !metasystemMode
-  setButtonsActiveByMetasystemMode()
-  reset({freshPlot: true, plotCurrentDialValues: true})
 }
 
 function convert100RangeToSliderShift(input) {
@@ -195,13 +178,13 @@ function convert100RangeToSliderShift(input) {
   return -((input - 50) / 50)
 }
 
-function newRender() {
-  c.clearRenderer()
+function newRender(algHierarchy, metasystemMode) {
+  algHierarchy.clearRenderer()
   if (metasystemMode) {
-    c.renderMetasystem()
+    algHierarchy.renderMetasystem()
   }
   else {
-    c.render()
+    algHierarchy.render()
   }
 }
 
@@ -212,6 +195,11 @@ function rnd(n) {
 
 
 $( function() {
+  let metasystemMode = false
+  let structuresToReset = initialise(metasystemMode)
+  let { algHierarchy, dataStore, barChart, statePlot } = structuresToReset
+  
+
   for (let i = 0; i < 8; i++) {
     $( "#vslide" + i ).slider({
       orientation: "vertical",
@@ -221,8 +209,8 @@ $( function() {
       value: 50,
       slide: function( event, ui ) {
         let newStripPos = convert100RangeToSliderShift(ui.value)
-        c.moveStrip(i, newStripPos)
-        reset({freshPlot: false, plotCurrentDialValues: true})
+        algHierarchy.moveStrip(i, newStripPos)
+        reset({freshPlot: false, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
       }
       });
   }
@@ -236,8 +224,8 @@ $( function() {
       playSpeed = ui.value
       switch (playMode) {
         case "none": break;
-        case "sequence": newSequenceSpeed(); break;
-        case "random": newRandomSpeed(); break;
+        case "sequence": newSequenceSpeed(structuresToReset, metasystemMode); break;
+        case "random": newRandomSpeed(structuresToReset, metasystemMode); break;
       }
     }
   });
@@ -256,8 +244,8 @@ $( function() {
       "angleOffset": -100,
       change: function ( v ) {
         let rounded = Math.round(v) // needed because it otherwise updates with intermediate float values...
-        c.setDialValue(i, rounded)
-        reset({freshPlot: false, plotCurrentDialValues: true})
+        algHierarchy.setDialValue(i, rounded)
+        reset({freshPlot: false, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
       }
   });
   }
@@ -268,25 +256,24 @@ $( function() {
       let rn = rnd(10)
       // $("#dial" + i).val(rn).trigger('change')
       $("#dial" + i).val(rn).trigger('change')
-      c.setDialValue(i, rn)
+      algHierarchy.setDialValue(i, rn)
     }
-    reset({freshPlot: false, plotCurrentDialValues: true})
+    reset({freshPlot: false, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
   })
 
   $("#draw-plot").button()
   $("#draw-plot").click((event) => {
       stop()
-      let { counts, individualResults } = c.fullSimulate()
+      let { counts, individualResults } = algHierarchy.fullSimulate()
       barChart.fullChart(counts)
-      statePlot.fullPlot(individualResults, statesCtx)
-    
+      statePlot.fullPlot(individualResults)
   })
 
   // $("#draw-plot").click()
 
-  $("#play-sequence").click(playSequence)
+  $("#play-sequence").click(() => playSequence(structuresToReset, metasystemMode))
 
-  $("#play-random").click(playRandom)
+  $("#play-random").click(() => playRandom(structuresToReset, metasystemMode))
 
   $("#stop").click(stop)
 
@@ -370,7 +357,7 @@ $( function() {
         coloursCurrent.lightBOff = colourPickerLightBOff.spectrum("get").toRgbString()
 
         dialog.dialog( "close" );
-        newRender()
+        newRender(algHierarchy, metasystemMode)
       },
 
       Cancel: function() {
@@ -406,10 +393,6 @@ $( function() {
       coloursTemp.lightBOn = colourPickerLightBOn.spectrum("get").toRgbString()
       coloursTemp.lightBOff = colourPickerLightBOff.spectrum("get").toRgbString()
     },
-    close: function() {
-      // form[ 0 ].reset();
-      
-    }
   })
 
   let confirmDefaultColoursDialog = $("#dialog-confirm-delete").dialog({
@@ -421,7 +404,7 @@ $( function() {
     buttons: {
       "Yes": function() {
         coloursCurrent = { ...coloursDefault }
-        newRender()
+        newRender(algHierarchy, metasystemMode)
         confirmDefaultColoursDialog.dialog("close")
       },
       "No": function() {
@@ -442,49 +425,57 @@ $( function() {
     step: 0.01,
     value: storeSpaceToDatapointSlider(InitialValues.DATA_STORE_SIZE),
     slide: function( event, ui ) {
-      resizeData(ui.value)
+      resizeData(ui.value, dataStore, barChart, statePlot)
     }
   });
 
   $("#labelDataPoints").text(`Data point store space: ${InitialValues.DATA_STORE_SIZE}`)
 
-  $("#reset-plot-and-data").click(clearPlot)
+  $("#reset-plot-and-data").click(() => clearPlot(dataStore, barChart, statePlot))
 
-  $("#random-contacts").button().click(setRandomContacts)
-  $("#default-contacts").button().click(restoreDefaultContacts)
+  $("#random-contacts").button().click(() => setRandomContacts(structuresToReset, metasystemMode))
+  $("#default-contacts").button().click(() => restoreDefaultContacts(structuresToReset, metasystemMode))
 
-  $("#metasystem-toggle").button().click(metasystemToggle)
+  $("#metasystem-toggle").button().click(() => {
+    metasystemMode = !metasystemMode
+    setButtonsActiveByMetasystemMode(metasystemMode)
+    reset({freshPlot: true, plotCurrentDialValues: true}, structuresToReset, metasystemMode)
+  })
 
 });
 
 
-window.onload = () => {
-  let canvas = document.getElementById("canvas")
-  context = canvas.getContext("2d")
+function initialise(metasystemMode) {
+  let dataStore = new SmallDataStore(InitialValues.DATA_STORE_SIZE)
+
+  let algCanvas = document.getElementById("canvas")
+  let algCtx = algCanvas.getContext("2d")
 
   let plotCanvas = document.getElementById("plot")
-  plotCtx = plotCanvas.getContext("2d")
+  let plotCtx = plotCanvas.getContext("2d")
 
   let statesCanvas = document.getElementById("states")
-  statesCtx = statesCanvas.getContext("2d")
+  let statesCtx = statesCanvas.getContext("2d")
 
-  c = new Hierarchy(new AlgedonodeHierarchyRenderer(context))
-  c.setupConnections()
+  let algHierarchy = new Hierarchy(new AlgedonodeHierarchyRenderer(algCtx))
+  algHierarchy.setupConnections()
   for (let i = 0; i < 4; i++) {
     $("#dial" + i).val(1).trigger('change')
-    c.setDialValue(i, 1)
+    algHierarchy.setDialValue(i, 1)
   }
-  barChart = new LimitedBarChart(plotCtx)
-  statePlot = new LimitedStatePlot(statesCtx)
-  reset({freshPlot: true, plotCurrentDialValues: true})
+  let barChart = new LimitedBarChart(plotCtx)
+  let statePlot = new LimitedStatePlot(statesCtx)
+  reset({freshPlot: true, plotCurrentDialValues: true}, {algHierarchy, dataStore, barChart, statePlot}, metasystemMode)
+
+  return { algHierarchy, dataStore, barChart, statePlot }
 }
 
 
-function reset({freshPlot, plotCurrentDialValues}) {
-  c.clearRenderer()
-  c.clear()
-  c.propagateDialValues()
-  newRender()
-  if (freshPlot) clearPlot()
-  if (plotCurrentDialValues) plotNewPoint()
+function reset({freshPlot, plotCurrentDialValues}, {algHierarchy, dataStore, barChart, statePlot}, metasystemMode) {
+  algHierarchy.clearRenderer()
+  algHierarchy.clear()
+  algHierarchy.propagateDialValues()
+  newRender(algHierarchy, metasystemMode)
+  if (freshPlot) clearPlot(dataStore, barChart, statePlot)
+  if (plotCurrentDialValues) plotNewPoint(algHierarchy, dataStore, barChart, statePlot)
 }

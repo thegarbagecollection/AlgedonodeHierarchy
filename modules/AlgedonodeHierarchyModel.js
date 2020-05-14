@@ -220,7 +220,7 @@
           this.dials[i].propagateValue()
         }
   
-  
+        this.clear()
         return ret
   
       }
