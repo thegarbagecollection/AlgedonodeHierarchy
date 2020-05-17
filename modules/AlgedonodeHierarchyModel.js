@@ -17,7 +17,7 @@
     return ret
   }
   
-  class Hierarchy {
+  class AlgedonodeHierarchy {
       // takes an AlgedonodeHierarchyRenderer
       constructor(renderer) {
           this.renderer = renderer

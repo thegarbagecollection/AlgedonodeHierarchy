@@ -9,7 +9,6 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
         <script src="./modules/StateAndConstants.js"></script>
-        
         <script src="./modules/AlgedonodeHierarchyModel.js"></script>
         <script src="./modules/AlgedonodeHierarchyRenderer.js"></script>
         <script src="./modules/SmallDataStore.js"></script>
@@ -25,8 +24,8 @@
                 <canvas id="canvas" width="600px" height="600px"></canvas>
                 <p></p>
                 <div id="systemSettings">
-                    <p><button class="ui-button ui-widget ui-corner-all" id="random-contacts">Random contacts</button></p>
-                    <p><button class="ui-button ui-widget ui-corner-all" id="default-contacts">Default contacts</button></p>
+                    <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="random-contacts">Random contacts</button></p>
+                    <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="default-contacts">Default contacts</button></p>
                     <p><button class="ui-button ui-widget ui-corner-all" id="metasystem-toggle">To metasystem view</button></p>
                 </div>
                 <div id="sliders">
@@ -59,7 +58,7 @@
                 <p><label for="datapoints" id="labelDataPoints">Data point store space</label><div class="hslide" id="datapoints"></div></p>
                 <br />
                 <div id="plotButtons"><p>
-                    <button class="ui-button ui-widget ui-corner-all" id="draw-plot">Full plot</button>
+                    <button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="draw-plot">Full plot</button>
                     <button class="ui-button ui-widget ui-corner-all" id="reset-plot-and-data">Reset plot & data</button></p>
                 </div>
                 <div id="options">
@@ -72,7 +71,6 @@
         <div id="dialog-colour-picker-form" title="Select colours">
             <form>
                 <fieldset>
-                    <!-- <input type="color" name="background" id="colour-background" class="text ui-widget-content ui-corner-all"> -->
                     <p><input type="text" name="backgroundCol" id="colour-background" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="backgroundCol">Background</label></p>
                     <p><input type="text" name="stripCol" id="colour-strip" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="stripCol">Strip</label></p>
                     <p><input type="text" name="dialOutCol" id="colour-dialout" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="dialOutCol">Dial output / contact</label></p>
@@ -98,7 +96,6 @@
                         <label for="lightBColOff" class="label-colourpicker">B lights on / off</label>
                     </p>
                     <p><input type="text" name="blackBoxCol" id="colour-blackbox" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="blackBoxCol">Black box</label></p>
-                    <!-- <input type="submit" value=""> -->
                 </fieldset>
             </form>
         </div>

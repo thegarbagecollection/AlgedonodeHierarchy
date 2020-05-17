@@ -5,14 +5,15 @@ const PlayMode = {
   }
   
   class PlayModeHandler {
-    constructor(structuresToReset) {
+    constructor(dialSetterFn, resetFn) {
       this.playInterval = null
       this.playSpeed = 50
       this.playIndex = 0
       this.playMode = PlayMode.STOP
       this.stateSequence = []
-      this.structuresToReset = structuresToReset
-  
+      this.resetFn = resetFn
+      this.dialSetterFn = dialSetterFn
+
       for (let i1 = 1; i1 <= 10; i1++) {
         for (let i2 = 1; i2 <= 10; i2++) {
           for (let i3 = 1; i3 <= 10; i3++) {
@@ -55,51 +56,50 @@ const PlayMode = {
     }
   
   
-    setDialsDirect(metasystemMode, states) {
+    setDialsDirect(states) {
       for (let i = 0; i < 4; i++) {
         let n = states[i]
-        $("#dial" + i).val(n).trigger('change')
-        this.structuresToReset.algHierarchy.setDialValue(i, n)
+        this.dialSetterFn(i,n)
       }
-      reset({ freshPlot: false, plotCurrentDialValues: true }, this.structuresToReset, metasystemMode)
+      this.resetFn()
     }
   
-    playSequence(metasystemMode) {
+    playSequence() {
       this.stop()
       this.playMode = PlayMode.SEQUENCE
       this.playIndex = 0
       this.playInterval = window.setInterval(() => {
-        this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
+        this.setDialsDirect(this.stateSequence[this.playIndex++])
       }, this.createDelayFromSpeed())
     }
   
-    newSequenceSpeed(metasystemMode) {
+    newSequenceSpeed() {
       this.stop()
       this.playMode = PlayMode.SEQUENCE
       this.playInterval = window.setInterval(() => {
-        this.setDialsDirect(metasystemMode, this.stateSequence[this.playIndex++])
+        this.setDialsDirect(this.stateSequence[this.playIndex++])
       }, this.createDelayFromSpeed())
     }
   
-    playRandom(metasystemMode) {
+    playRandom() {
       this.stop()
       this.playMode = PlayMode.RANDOM
       this.playInterval = window.setInterval(() => {
         let rs = this.randomState()
-        this.setDialsDirect(metasystemMode, rs)
+        this.setDialsDirect(rs)
       }, this.createDelayFromSpeed())
     }
   
-    newRandomSpeed(metasystemMode) {
-      this.playRandom(metasystemMode) // don't need to do anything else
+    newRandomSpeed() {
+      this.playRandom() // don't need to do anything else
     }
   
-    setNewPlaySpeed(newSpeed, metasystemMode) {
+    setNewPlaySpeed(newSpeed) {
       this.playSpeed = newSpeed
       switch (this.playMode) {
         case PlayMode.STOP: break;
-        case PlayMode.SEQUENCE: this.newSequenceSpeed(metasystemMode); break;
-        case PlayMode.RANDOM: this.newSequenceSpeed(metasystemMode); break;
+        case PlayMode.SEQUENCE: this.newSequenceSpeed(); break;
+        case PlayMode.RANDOM: this.newRandomSpeed(); break;
       }
     }
   }

@@ -1,6 +1,6 @@
 
 class ContactsHandler {
-    constructor(structuresToReset) {
+    constructor(algHierarchy, resetFn) {
       const contactsDefault2 = [-0.49, 0.49]
       const contactsDefault4 = [-0.49, -0.16, 0.16, 0.49 ]
       const contactsDefault8 = [-0.49, -0.35, -0.21, -0.07, 0.07, 0.21, 0.35 , 0.49]
@@ -12,7 +12,8 @@ class ContactsHandler {
         "8": [contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8],
       }
       this.contactsCurrent = { ...this.contactsDefault }
-      this.structuresToReset = structuresToReset
+      this.algHierarchy = algHierarchy
+      this.resetFn = resetFn
     }
   
     // returns a list of n random contact positions in [-0.49, 0.49]
@@ -25,19 +26,19 @@ class ContactsHandler {
       return new Array(8).fill(null).map(_ => this.randomContactPositions(n))
     }
   
-    setRandomContacts(metasystemMode) {
+    setRandomContacts() {
       this.contactsCurrent[1] = this.randomContactPositions(8)
       this.contactsCurrent[2] = this.randomContactPositions8(2)
       this.contactsCurrent[4] = this.randomContactPositions8(4)
       this.contactsCurrent[8] = this.randomContactPositions8(8)
-      this.structuresToReset.algHierarchy.setNewContactPositions(this)
-      reset({freshPlot: true, plotCurrentDialValues: true}, this.structuresToReset, metasystemMode)
+      this.algHierarchy.setNewContactPositions(this)
+      this.resetFn()
     }
   
-    restoreDefaultContacts(metasystemMode) {
+    restoreDefaultContacts() {
       this.contactsCurrent = { ...this.contactsDefault }
-      this.structuresToReset.algHierarchy.setNewContactPositions(this)
-      reset({freshPlot: true, plotCurrentDialValues: true}, this.structuresToReset, metasystemMode)
+      this.algHierarchy.setNewContactPositions(this)
+      this.resetFn()
     }
   
     getContactsCurrent() {
