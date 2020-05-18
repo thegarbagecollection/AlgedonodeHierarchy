@@ -1,5 +1,6 @@
 class LimitedBarChart {
-  constructor(barChartContext) {
+  constructor(barChartContext, colourHandler) {
+    this.colourHandler = colourHandler
     this.barData = new Array(8).fill(null).map(_ => {
       return { A: 0, B: 0 }
     }) // one per column
@@ -106,12 +107,12 @@ class LimitedBarChart {
       let gH = (maxDrawH * bCount) / this.totalFrequencyDataCount
 
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightAOn
+      this.ctx.fillStyle = this.colourHandler.lightAOn
       this.ctx.fillRect(columnRemovedFrom * barColumnW + barColumnW / 9, maxDrawH - rH, barColumnW / 2 - barColumnW / 9, rH)
       this.ctx.stroke()
 
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightBOn
+      this.ctx.fillStyle = this.colourHandler.lightBOn
       this.ctx.fillRect(columnRemovedFrom * barColumnW + barColumnW / 2, maxDrawH - gH, barColumnW / 2 - barColumnW / 9, gH)
       this.ctx.stroke()
     }
@@ -123,12 +124,12 @@ class LimitedBarChart {
       let gH = (maxDrawH * bCount) / this.totalFrequencyDataCount
 
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightAOn
+      this.ctx.fillStyle = this.colourHandler.lightAOn
       this.ctx.fillRect(columnAddedTo * barColumnW + barColumnW / 9, maxDrawH - rH, barColumnW / 2 - barColumnW / 9, rH)
       this.ctx.stroke()
 
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightBOn
+      this.ctx.fillStyle = this.colourHandler.lightBOn
       this.ctx.fillRect(columnAddedTo * barColumnW + barColumnW / 2, maxDrawH - gH, barColumnW / 2 - barColumnW / 9, gH)
       this.ctx.stroke()
     }
@@ -139,7 +140,7 @@ class LimitedBarChart {
     let totalLightB = this.totalFrequencyData["B"]
 
     this.ctx.beginPath()
-    this.ctx.fillStyle = coloursCurrent.lightAOn
+    this.ctx.fillStyle = this.colourHandler.lightAOn
     this.ctx.fillRect(
       9 * barColumnW + barColumnW / 9,
       maxDrawH - (maxDrawH * totalLightA) / this.totalFrequencyDataCount,
@@ -149,7 +150,7 @@ class LimitedBarChart {
     this.ctx.stroke()
 
     this.ctx.beginPath()
-    this.ctx.fillStyle = coloursCurrent.lightBOn
+    this.ctx.fillStyle = this.colourHandler.lightBOn
     this.ctx.fillRect(10 * barColumnW, maxDrawH - (maxDrawH * totalLightB) / this.totalFrequencyDataCount, barColumnW - barColumnW / 9, (maxDrawH * totalLightB) / this.totalFrequencyDataCount)
     this.ctx.stroke()
   }
@@ -212,12 +213,12 @@ class LimitedBarChart {
       let rH = (maxDrawH * aCount) / 10000
       let gH = (maxDrawH * bCount) / 10000
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightAOn
+      this.ctx.fillStyle = this.colourHandler.lightAOn
       this.ctx.fillRect(i * barColumnW + barColumnW / 9, maxDrawH - rH, barColumnW / 2 - barColumnW / 9, rH)
       this.ctx.stroke()
   
       this.ctx.beginPath()
-      this.ctx.fillStyle = coloursCurrent.lightBOn
+      this.ctx.fillStyle = this.colourHandler.lightBOn
       this.ctx.fillRect(i * barColumnW + barColumnW / 2, maxDrawH - gH, barColumnW / 2 - barColumnW / 9, gH)
       this.ctx.stroke()
   
@@ -239,12 +240,12 @@ class LimitedBarChart {
     this.ctx.stroke()
   
     this.ctx.beginPath()
-    this.ctx.fillStyle = coloursCurrent.lightAOn
+    this.ctx.fillStyle = this.colourHandler.lightAOn
     this.ctx.fillRect(9 * barColumnW + barColumnW / 9, maxDrawH - (maxDrawH * totalLightA) / 10000, barColumnW - barColumnW / 9, (maxDrawH * totalLightA) / 10000)
     this.ctx.stroke()
   
     this.ctx.beginPath()
-    this.ctx.fillStyle = coloursCurrent.lightBOn
+    this.ctx.fillStyle = this.colourHandler.lightBOn
     this.ctx.fillRect(10 * barColumnW, maxDrawH - (maxDrawH * totalLightB) / 10000, barColumnW - barColumnW / 9, (maxDrawH * totalLightB) / 10000)
     this.ctx.stroke()
   
@@ -261,8 +262,9 @@ class LimitedBarChart {
 
 
 class LimitedStatePlot {
-  constructor(context) {
+  constructor(context, colourHandler) {
     this.ctx = context
+    this.colourHandler = colourHandler
   }
 
   plotStatePoint(newPoint, removedPoint) {
@@ -303,8 +305,8 @@ class LimitedStatePlot {
       let x = 10 * (statesNew[0] - 1) + (statesNew[1] - 1)
       let y = 10 * (statesNew[2] - 1) + (statesNew[3] - 1)
       // this.ctx.beginPath()
-      // this.ctx.strokeStyle = lightRowNew === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-      this.ctx.fillStyle = lightRowNew === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+      // this.ctx.strokeStyle = lightRowNew === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+      this.ctx.fillStyle = lightRowNew === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
   
       // let adjustedX = drawableLeftS + x * coordOffsetMultX
       // let adjustedY = drawableBottomS - y * coordOffsetMultY
@@ -368,8 +370,8 @@ class LimitedStatePlot {
       })
       .forEach(({ x, y, result }) => {
         this.ctx.beginPath()
-        this.ctx.strokeStyle = result.aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-        this.ctx.fillStyle = result.aOrB === "A" ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
+        this.ctx.strokeStyle = result.aOrB === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+        this.ctx.fillStyle = result.aOrB === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
   
         let adjustedX = drawableLeftS + x * coordOffsetMultX
         let adjustedY = drawableBottomS - (y + 1) * coordOffsetMultY

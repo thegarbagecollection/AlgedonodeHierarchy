@@ -237,18 +237,9 @@
           }
         }
   
-        let counts = results.reduce((acc, { result: {lightNum, aOrB} }) => {
-          if (!(acc[lightNum])) {
-            acc[lightNum] = { aCount: 0, bCount: 0}
-          }
-          let {aCount, bCount} = acc[lightNum]
-          acc[lightNum] = { aCount: (aOrB === LightType.A ? aCount + 1 : aCount), bCount: (aOrB === LightType.B ? bCount + 1 : bCount)}
-          return acc
-        }, [])
-  
-  
-  
-        return { counts, individualResults: results }
+        // results: in format {state: [i1,i2,i3,i4], result: { lightNum, aOrB }}
+
+        return results
       }
   
       getIlluminatedLight() {

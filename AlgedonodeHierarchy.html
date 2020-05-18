@@ -17,6 +17,7 @@
         <script src="./modules/ContactsHandler.js"></script>
         <script src="./modules/RenderingHandler.js"></script>
         <script src="./modules/DataHandler.js"></script>
+        <script src="./modules/ColourHandler.js"></script>
         <script src="./modules/Interface.js"></script>
         
     </head>
@@ -72,32 +73,8 @@
         </div>
         <div id="dialog-colour-picker-form" title="Select colours">
             <form>
-                <fieldset>
-                    <p><input type="text" name="backgroundCol" id="colour-background" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="backgroundCol">Background</label></p>
-                    <p><input type="text" name="stripCol" id="colour-strip" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="stripCol">Strip</label></p>
-                    <p><input type="text" name="dialOutCol" id="colour-dialout" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="dialOutCol">Dial output / contact</label></p>
-                    <p><input type="text" name="activatedCol" id="colour-activated" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="activatedCol">Activated element</label></p>
-                    <p>
-                        <input type="text" name="padCol" id="colour-brasspad" class="text ui-widget-content ui-corner-all colourpicker">
-                        <input type="text" name="padEdgeCol" id="colour-brasspad-edge" class="text ui-widget-content ui-corner-all colourpicker">
-                        <label for="padEdgeCol" class="label-colourpicker">Brass pad / edge</label>
-                    </p>
-                    <p>
-                        <input type="text" name="algedonodeCol" id="colour-algedonode" class="text ui-widget-content ui-corner-all colourpicker">
-                        <input type="text" name="algedonodeEdgeCol" id="colour-algedonode-edge" class="text ui-widget-content ui-corner-all colourpicker">
-                        <label for="algedonodeEdgeCol" class="label-colourpicker">Algedonode / edge</label>
-                    </p>
-                    <p>
-                        <input type="text" name="lightAColOn" id="colour-light-a-on" class="text ui-widget-content ui-corner-all colourpicker">
-                        <input type="text" name="lightAColOff" id="colour-light-a-off" class="text ui-widget-content ui-corner-all colourpicker">
-                        <label for="lightAColOff" class="label-colourpicker">A lights on / off</label>
-                    </p>
-                    <p>
-                        <input type="text" name="lightBColOn" id="colour-light-b-on" class="text ui-widget-content ui-corner-all colourpicker">
-                        <input type="text" name="lightBColOff" id="colour-light-b-off" class="text ui-widget-content ui-corner-all colourpicker">
-                        <label for="lightBColOff" class="label-colourpicker">B lights on / off</label>
-                    </p>
-                    <p><input type="text" name="blackBoxCol" id="colour-blackbox" class="text ui-widget-content ui-corner-all colourpicker"><label class="label-colourpicker" for="blackBoxCol">Black box</label></p>
+                <fieldset id="colour-picker-field">
+                    <!-- Will be filled programmatically by Interface.js from colours in ColourHandler.js -->
                 </fieldset>
             </form>
         </div>

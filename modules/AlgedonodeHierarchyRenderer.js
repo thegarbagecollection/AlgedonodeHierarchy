@@ -1,6 +1,7 @@
 class AlgedonodeHierarchyRenderer {
-  constructor(context) {
+  constructor(context, colourHandler) {
     this.ctx = context
+    this.colourHandler = colourHandler
     this.positionInfo = {
       columnSpacing: 50, // distance between columns
       columnWidth: 10, // width of a single column
@@ -13,7 +14,7 @@ class AlgedonodeHierarchyRenderer {
     let canvas = this.ctx.canvas
     let w = canvas.width
     let h = canvas.height
-    this.ctx.fillStyle = coloursCurrent.background
+    this.ctx.fillStyle = this.colourHandler.background
     this.ctx.fillRect(0, 0, w, h)
   }
 
@@ -58,7 +59,7 @@ class AlgedonodeHierarchyRenderer {
     let contactY = firstContactY + outputNum * gapBetweenOutputs
 
     let lineWidth = 1.3
-    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let strokeStyle = active ? this.colourHandler.activated : this.colourHandler.dialOutput
     let start = {x: cX, y: contactY }
     let end = { x: cX - 2 * this.positionInfo.rowHeight, y: contactY}
     this.line({lineWidth, strokeStyle}, start, end)
@@ -70,7 +71,7 @@ class AlgedonodeHierarchyRenderer {
     let stripTL = { x: cX - this.positionInfo.columnWidth, y: cY - 2.5 * this.positionInfo.rowHeight + (offset * this.positionInfo.rowHeight / 2)}
     let height = 3 * this.positionInfo.rowSpacing + 5 * this.positionInfo.rowHeight
 
-    this.rectangle({lineWidth: 1.0, strokeStyle: coloursCurrent.strip, fillStyle: coloursCurrent.strip}, 
+    this.rectangle({lineWidth: 1.0, strokeStyle: this.colourHandler.strip, fillStyle: this.colourHandler.strip}, 
         stripTL.x, stripTL.y, this.positionInfo.columnWidth, height)
   }
 
@@ -82,8 +83,8 @@ class AlgedonodeHierarchyRenderer {
 
     this.lightConnection(theLight, column, rowOffset, aOrB, active, activationSource)
 
-    let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-    let offColour = aOrB === LightType.A ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+    let onColour = aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+    let offColour = aOrB === LightType.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
 
     let colour = active ? onColour : offColour
 
@@ -92,7 +93,7 @@ class AlgedonodeHierarchyRenderer {
 
   lightConnection(theLight, column, rowOffset, aOrB, active, activationSource) {
     let lineWidth = 1.5
-    let strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
 
     var {x, y} = this.lightConnectionCoords(column, rowOffset, aOrB)
     this.line({lineWidth, strokeStyle}, 
@@ -100,7 +101,7 @@ class AlgedonodeHierarchyRenderer {
         {x:x, y:y + this.positionInfo.rowHeight / 4}, 
         {x:x + this.positionInfo.columnWidth / 4, y:y + this.positionInfo.rowHeight / 4 })
 
-    strokeStyle = active ? coloursCurrent.activated : "black"
+    strokeStyle = active ? this.colourHandler.activated : "black"
     var wjc = this.lightWireJoinCoords(theLight)
     this.line({lineWidth, strokeStyle}, {x, y}, wjc)
     this.circle({lineWidth, strokeStyle, fillStyle: strokeStyle}, x, y, 2)
@@ -112,8 +113,8 @@ class AlgedonodeHierarchyRenderer {
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
-    let onColour = aOrB === LightType.A ? coloursCurrent.lightAOn : coloursCurrent.lightBOn
-    let offColour = aOrB === LightType.A ? coloursCurrent.lightAOff : coloursCurrent.lightBOff
+    let onColour = aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+    let offColour = aOrB === LightType.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
 
     let colour = active ? onColour : offColour
 
@@ -123,8 +124,8 @@ class AlgedonodeHierarchyRenderer {
   algedonode(row, column, active) {
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let algTL = { x: cX, y: cY - (0.7 * this.positionInfo.rowHeight) }
-    let fillStyle = coloursCurrent.algedonode
-    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.algedonodeEdge
+    let fillStyle = this.colourHandler.algedonode
+    let strokeStyle = active ? this.colourHandler.activated : this.colourHandler.algedonodeEdge
     let lineWidth = 1.0
     this.rectangle({lineWidth, strokeStyle, fillStyle}, algTL.x, algTL.y, this.positionInfo.columnWidth, this.positionInfo.rowHeight * 1.4)
   }
@@ -136,7 +137,7 @@ class AlgedonodeHierarchyRenderer {
     let y = cY + position * this.positionInfo.rowHeight
 
     let lineWidth = 1.5
-    let strokeStyle = active ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let strokeStyle = active ? this.colourHandler.activated : this.colourHandler.dialOutput
     this.line({ lineWidth, strokeStyle }, {x, y}, {x: x + this.positionInfo.columnWidth , y})
   }
 
@@ -147,7 +148,7 @@ class AlgedonodeHierarchyRenderer {
     let y = cY + position * this.positionInfo.rowHeight
 
     let lineWidth = 1.5
-    let strokeStyle = active && algedonodeActive ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let strokeStyle = active && algedonodeActive ? this.colourHandler.activated : this.colourHandler.dialOutput
     this.line({lineWidth, strokeStyle}, {x, y}, {x: x - this.positionInfo.columnWidth * 3 / 4, y} )
   }
 
@@ -163,10 +164,10 @@ class AlgedonodeHierarchyRenderer {
     let padTL = [pad0TL, pad1TL]
 
     let lineWidth = 1
-    let fillStyle = coloursCurrent.brassPad
+    let fillStyle = this.colourHandler.brassPad
 
     for (let i = 0; i < 2; i++) {
-        let strokeStyle = active[i] ? coloursCurrent.activated : coloursCurrent.brassPadEdge
+        let strokeStyle = active[i] ? this.colourHandler.activated : this.colourHandler.brassPadEdge
         this.rectangle({lineWidth, strokeStyle, fillStyle}, padTL[i].x, padTL[i].y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
     }
 
@@ -186,7 +187,7 @@ class AlgedonodeHierarchyRenderer {
 
     for (let i = 0; i < 2; i++) {
         var {x, y} = this.lightWireJoinCoords(lightPair[i])
-        let strokeStyle = active[i] ? coloursCurrent.activated : "black"
+        let strokeStyle = active[i] ? this.colourHandler.activated : "black"
         let start = { x: padTL[i].x, y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
         let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth,  y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
         let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: y }
@@ -202,7 +203,7 @@ class AlgedonodeHierarchyRenderer {
     let multipliersY = [[0.1, 0.3], [0.9, -0.3]]
 
     for (let i = 0; i < 2; i++) {
-        let strokeStyle = active[i] ? coloursCurrent.activated : "black"
+        let strokeStyle = active[i] ? this.colourHandler.activated : "black"
         let start = {x: padTL[i].x, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
         let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
         let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: cY - multipliersY[i][1] * this.positionInfo.rowHeight}
@@ -221,10 +222,10 @@ class AlgedonodeHierarchyRenderer {
     let connPoint = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
 
     let lineWidth = 1
-    let strokeStyleDialOutput = activationSource === ActivationSource.DIAL_OUTPUT ? coloursCurrent.activated : coloursCurrent.dialOutput
+    let strokeStyleDialOutput = activationSource === ActivationSource.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
     this.line({ lineWidth, strokeStyle: strokeStyleDialOutput }, connPoint, {x : connPoint.x, y: connPoint.y - this.positionInfo.rowHeight / 3.5})
 
-    let styleAlgedonodeSet = active ? coloursCurrent.activated : "black"
+    let styleAlgedonodeSet = active ? this.colourHandler.activated : "black"
     this.circle({ lineWidth, strokeStyle: styleAlgedonodeSet, fillStyle: styleAlgedonodeSet }, connPoint.x, connPoint.y, 2)
 
 

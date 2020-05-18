@@ -6,12 +6,24 @@ class DataHandler {
       this.dataPointLabelSetter = dataPointLabelSetter // function: StoreSpace -> String
     }
   
-    fullPlot(counts, individualResults) {
+    fullPlot(individualResults) {
+      let counts = this.computeCountsFromResults(individualResults)
       this.clearPlot()
       this.barChart.fullChart(counts)
       this.statePlot.fullPlot(individualResults)
     }
   
+    computeCountsFromResults(individualResults) {
+      return individualResults.reduce((acc, { result: {lightNum, aOrB} }) => {
+        if (!(acc[lightNum])) {
+          acc[lightNum] = { aCount: 0, bCount: 0}
+        }
+        let {aCount, bCount} = acc[lightNum]
+        acc[lightNum] = { aCount: (aOrB === LightType.A ? aCount + 1 : aCount), bCount: (aOrB === LightType.B ? bCount + 1 : bCount)}
+        return acc
+      }, [])
+    }
+
     datapointSliderToStoreSpace(sliderVal) {
       // minimum of 100, max of 20000 seems reasonable
       // use a low-order polynomial: x^2 on (0, 1]?

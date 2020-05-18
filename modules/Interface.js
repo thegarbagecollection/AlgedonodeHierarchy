@@ -32,7 +32,7 @@ function setDial(algHierarchy) {
 
 $( function() {
   let { disabledByMetasystem, labelledByMetasystemMode } = metasystemButtonFunctions()
-  let { algHierarchy, dataStore, barChart, statePlot } = initialise()
+  let { algHierarchy, dataStore, barChart, statePlot, colourHandler } = initialise()
   
   let renderingHandler = new RenderingHandler(algHierarchy, disabledByMetasystem, labelledByMetasystemMode)
 
@@ -47,6 +47,9 @@ $( function() {
 
   let contactsHandler = new ContactsHandler(algHierarchy, resetHierarchyResetPlot)
   algHierarchy.setupConnections(contactsHandler)
+
+  
+
 
   resetHierarchyResetPlot()
 
@@ -113,8 +116,9 @@ $( function() {
   $("#draw-plot").button()
   $("#draw-plot").click((event) => {
       stop()
-      let { counts, individualResults } = algHierarchy.fullSimulate()
-      dataHandler.fullPlot(counts, individualResults)
+      let results = algHierarchy.fullSimulate()
+      
+      dataHandler.fullPlot(results)
   })
 
   $("#play-sequence").click(() => playModeHandler.playSequence())
@@ -124,59 +128,38 @@ $( function() {
   $("#stop").click(() => playModeHandler.stop())
 
   
+  let colourRows = colourHandler.getColourables()
+  let colourPickerField = $("#colour-picker-field")
+  colourRows.forEach(({ label, elementNames }) => {
+    let colourRow = $(`<p></p>`)
+    let colourLabel = $(`<label></label>`)
+      .text(label)
+      .attr({ for: `colour-${elementNames[elementNames.length - 1]}`})
+      .addClass("label-colourpicker")
+    let colourPickers = elementNames.map(name => {
+      return $("<input></input>")
+        .attr( {
+          name: `colour-${name}`,
+          type: "text",
+          id: `colour-${name}`,
+        })
+        .addClass("text", "ui-widget-content", "ui-corner-all", "colourpicker")
+    })
 
 
-  let colourPickerBackground = $("#colour-background").spectrum({
-    color: coloursDefault.background
+
+    colourPickers.forEach(colourPicker => colourRow.append(colourPicker))
+    colourRow.append(colourLabel)
+    colourPickerField.append(colourRow)
   })
-
-  let colourPickerStrip = $("#colour-strip").spectrum({
-    color: coloursDefault.strip
-  })
-
-  let colourPickerDialOutput = $("#colour-dialout").spectrum({
-    color: coloursDefault.dialOutput
-  })
-
-  let colourPickerActivated = $("#colour-activated").spectrum({
-    color: coloursDefault.activated
-  })
-
-  let colourPickerBrassPad = $("#colour-brasspad").spectrum({
-    color: coloursDefault.brassPad
-  })
-
-  let colourPickerBrassPadEdge = $("#colour-brasspad-edge").spectrum({
-    color: coloursDefault.brassPadEdge
-  })
-
-  let colourPickerAlgedonode = $("#colour-algedonode").spectrum({
-    color: coloursDefault.algedonode
-  })
-
-  let colourPickerAlgedonodeEdge = $("#colour-algedonode-edge").spectrum({
-    color: coloursDefault.algedonodeEdge
-  })
-  
-  let colourPickerLightAOn = $("#colour-light-a-on").spectrum({
-    color: coloursDefault.lightAOn
-  })
-
-  let colourPickerLightAOff = $("#colour-light-a-off").spectrum({
-    color: coloursDefault.lightAOff
-  })
-
-  let colourPickerLightBOn = $("#colour-light-b-on").spectrum({
-    color: coloursDefault.lightBOn
-  })
-
-  let colourPickerLightBOff = $("#colour-light-b-off").spectrum({
-    color: coloursDefault.lightBOff
-  })
-
-  $("#colour-blackbox").spectrum({
-    color: "black",
-    disabled: true
+  // Conversion to a Spectrum seems to have to happen after the elements 
+  // have been added to the DOM, otherwise it doesn't render them!
+  colourRows.forEach(({label, elementNames}) => {
+    elementNames.forEach(name => { 
+      $(`#colour-${name}`).spectrum({
+        color: colourHandler.getByName(name)
+      }) 
+    })
   })
 
   let dialog = $("#dialog-colour-picker-form").dialog({
@@ -187,57 +170,36 @@ $( function() {
     
     buttons: {
       "Apply": () => { 
-        coloursCurrent.background = colourPickerBackground.spectrum("get").toRgbString()
-        coloursCurrent.strip = colourPickerStrip.spectrum("get").toRgbString()
-        coloursCurrent.dialOutput = colourPickerDialOutput.spectrum("get").toRgbString()
-        coloursCurrent.activated = colourPickerActivated.spectrum("get").toRgbString()
-        coloursCurrent.brassPad = colourPickerBrassPad.spectrum("get").toRgbString()
-        coloursCurrent.brassPadEdge = colourPickerBrassPadEdge.spectrum("get").toRgbString()
-        coloursCurrent.algedonode = colourPickerAlgedonode.spectrum("get").toRgbString()
-        coloursCurrent.algedonodeEdge = colourPickerAlgedonodeEdge.spectrum("get").toRgbString()
-
-        coloursCurrent.lightAOn = colourPickerLightAOn.spectrum("get").toRgbString()
-        coloursCurrent.lightAOff = colourPickerLightAOff.spectrum("get").toRgbString()
-        
-        coloursCurrent.lightBOn = colourPickerLightBOn.spectrum("get").toRgbString()
-        coloursCurrent.lightBOff = colourPickerLightBOff.spectrum("get").toRgbString()
+        colourRows.forEach(({ label, elementNames }) => {
+          elementNames.forEach(name => {
+            let newColour = $(`#colour-${name}`).spectrum("get").toRgbString()
+            colourHandler.colourChange(name, newColour)
+          })
+        })
 
         dialog.dialog( "close" );
+        colourHandler.commitColourChange()
         renderingHandler.newRender()
       },
 
       Cancel: function() {
-        colourPickerBackground.spectrum("set", coloursTemp.background)
-        colourPickerStrip.spectrum("set", coloursTemp.strip)
-        colourPickerDialOutput.spectrum("set", coloursTemp.dialOutput)
-        colourPickerActivated.spectrum("set", coloursTemp.activated)
-        colourPickerBrassPad.spectrum("set", coloursTemp.brassPad)
-        colourPickerBrassPadEdge.spectrum("set", coloursTemp.brassPadEdge)
-        colourPickerAlgedonode.spectrum("set", coloursTemp.algedonode)
-        colourPickerAlgedonodeEdge.spectrum("set", coloursTemp.algedonodeEdge)
-        colourPickerLightAOn.spectrum("set", coloursTemp.lightAOn)
-        colourPickerLightAOff.spectrum("set", coloursTemp.lightAOff)
-
-        colourPickerLightBOn.spectrum("set", coloursTemp.lightBOn)
-        colourPickerLightBOff.spectrum("set", coloursTemp.lightBOff)
-
+        colourRows.forEach(({ label, elementNames }) => {
+          elementNames.forEach(name => {
+            $(`#colour-${name}`).spectrum("set", colourHandler.getByName(name))
+          })
+        })
+        
         dialog.dialog( "close" );
+        colourHandler.cancelColourChange()
       }
     },
     open: function () {
-      // Need to save colours here
-      coloursTemp.background = colourPickerBackground.spectrum("get").toRgbString()
-      coloursTemp.strip = colourPickerStrip.spectrum("get").toRgbString()
-      coloursTemp.dialOutput = colourPickerDialOutput.spectrum("get").toRgbString()
-      coloursTemp.activated = colourPickerActivated.spectrum("get").toRgbString()
-      coloursTemp.brassPad = colourPickerBrassPad.spectrum("get").toRgbString()
-      coloursTemp.brassPadEdge = colourPickerBrassPadEdge.spectrum("get").toRgbString()
-      coloursTemp.algedonode = colourPickerAlgedonode.spectrum("get").toRgbString()
-      coloursTemp.algedonodeEdge = colourPickerAlgedonodeEdge.spectrum("get").toRgbString()
-      coloursTemp.lightAOn = colourPickerLightAOn.spectrum("get").toRgbString()
-      coloursTemp.lightAOff = colourPickerLightAOff.spectrum("get").toRgbString()
-      coloursTemp.lightBOn = colourPickerLightBOn.spectrum("get").toRgbString()
-      coloursTemp.lightBOff = colourPickerLightBOff.spectrum("get").toRgbString()
+      colourHandler.beginColourChange()
+      colourRows.forEach(({ label, elementNames }) => {
+        elementNames.forEach(name => {
+          $(`#colour-${name}`).spectrum("set", colourHandler.getByName(name))
+        })
+      })
     },
   })
 
@@ -249,7 +211,7 @@ $( function() {
     modal: true,
     buttons: {
       "Yes": function() {
-        coloursCurrent = { ...coloursDefault }
+        colourHandler.setToDefault()
         renderingHandler.reset()
         confirmDefaultColoursDialog.dialog("close")
       },
@@ -303,13 +265,15 @@ function initialise() {
   let statesCanvas = document.getElementById("states")
   let statesCtx = statesCanvas.getContext("2d")
 
-  let algHierarchy = new AlgedonodeHierarchy(new AlgedonodeHierarchyRenderer(algCtx))
+  let colourHandler = new ColourHandler()
+
+  let algHierarchy = new AlgedonodeHierarchy(new AlgedonodeHierarchyRenderer(algCtx, colourHandler))
   for (let i = 0; i < 4; i++) {
     setDial(algHierarchy)(i, 1)
   }
-  let barChart = new LimitedBarChart(plotCtx)
-  let statePlot = new LimitedStatePlot(statesCtx)
+  let barChart = new LimitedBarChart(plotCtx, colourHandler)
+  let statePlot = new LimitedStatePlot(statesCtx, colourHandler)
 
 
-  return { algHierarchy, dataStore, barChart, statePlot }
+  return { algHierarchy, dataStore, barChart, statePlot, colourHandler }
 }
