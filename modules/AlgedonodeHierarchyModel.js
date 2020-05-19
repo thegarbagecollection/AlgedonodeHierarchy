@@ -414,7 +414,6 @@
     activate(source) {
       // source isn't used here - this will always be from a dial
       this.active = true
-      // console.log("TODO: an activated contact must also activate the corresponding brass pad")
       // If this is active, we need to activate the brass pad underneath, whichever it is
       if (this.algedonodeActive) {
         this.brassPadPair.activate(this.position)

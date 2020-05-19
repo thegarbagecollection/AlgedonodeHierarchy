@@ -39,19 +39,22 @@ $( function() {
   let dataPointLabelSetter = (newStoreSpace) => $("#labelDataPoints").text(`Data point store space: ${newStoreSpace}`)
   let dataHandler = new DataHandler(dataStore, barChart, statePlot, dataPointLabelSetter)
 
-  let resetCreator = (bool) => () => { renderingHandler.reset(); dataHandler.plotNewPoint(bool, algHierarchy); }
-  let resetHierarchyKeepPlot = resetCreator(false)
-  let resetHierarchyResetPlot = resetCreator(true)
-  
-  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), resetHierarchyKeepPlot)
+  let resetHierarchyAndPlotNewPoint = () => { 
+    renderingHandler.reset()
+    dataHandler.drawAxes()
+    dataHandler.plotNewPoint(algHierarchy)
+  }
 
-  let contactsHandler = new ContactsHandler(algHierarchy, resetHierarchyResetPlot)
+  
+  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), resetHierarchyAndPlotNewPoint)
+
+  let contactsHandler = new ContactsHandler(algHierarchy, resetHierarchyAndPlotNewPoint)
   algHierarchy.setupConnections(contactsHandler)
 
+  let sliderOrContactsChanged = true // force a full render of the full plot first time
   
 
-
-  resetHierarchyResetPlot()
+  resetHierarchyAndPlotNewPoint()
 
   for (let i = 0; i < 8; i++) {
     $( "#vslide" + i ).slider({
@@ -61,10 +64,10 @@ $( function() {
       max: 100,
       value: 50,
       slide: function( event, ui ) {
+        sliderOrContactsChanged = true
         let newStripPos = convert100RangeToSliderShift(ui.value)
         algHierarchy.moveStrip(i, newStripPos)
-        renderingHandler.reset()
-        resetHierarchyKeepPlot()
+        resetHierarchyAndPlotNewPoint()
       }
       });
   }
@@ -95,30 +98,27 @@ $( function() {
       change: function ( v ) {
         let rounded = Math.round(v) // needed because it otherwise updates with intermediate float values...
         algHierarchy.setDialValue(i, rounded)
-        renderingHandler.reset()
-        resetHierarchyKeepPlot()
+        resetHierarchyAndPlotNewPoint()
       }
   });
   }
 
   $("#random-state").click((event) => {
-    stop()
+    playModeHandler.stop()
     for (let i = 0; i < 4; i++) {
       let rn = rnd(10)
       // $("#dial" + i).val(rn).trigger('change')
       $("#dial" + i).val(rn).trigger('change')
       algHierarchy.setDialValue(i, rn)
     }
-    renderingHandler.reset()
-    resetHierarchyKeepPlot()
+    resetHierarchyAndPlotNewPoint()
   })
 
   $("#draw-plot").button()
   $("#draw-plot").click((event) => {
-      stop()
-      let results = algHierarchy.fullSimulate()
-      
-      dataHandler.fullPlot(results)
+      playModeHandler.stop()
+      dataHandler.requestCompletePlot(algHierarchy, sliderOrContactsChanged)
+      sliderOrContactsChanged = false
   })
 
   $("#play-sequence").click(() => playModeHandler.playSequence())
@@ -180,6 +180,7 @@ $( function() {
         dialog.dialog( "close" );
         colourHandler.commitColourChange()
         renderingHandler.newRender()
+        dataHandler.colourChange()
       },
 
       Cancel: function() {
@@ -212,7 +213,9 @@ $( function() {
     buttons: {
       "Yes": function() {
         colourHandler.setToDefault()
-        renderingHandler.reset()
+        renderingHandler.newRender()
+        let storedResults = dataStore.getStoredResults()
+        dataHandler.fullPlotForColourChange(storedResults)
         confirmDefaultColoursDialog.dialog("close")
       },
       "No": function() {
@@ -239,15 +242,21 @@ $( function() {
 
   $("#labelDataPoints").text(`Data point store space: ${InitialValues.DATA_STORE_SIZE}`)
 
-  $("#reset-plot-and-data").click(() => dataHandler.clearPlot())
+  $("#reset-plot-and-data").click(() => dataHandler.clearPlotGraphicAndData())
 
-  $("#random-contacts").button().click(() => contactsHandler.setRandomContacts())
-  $("#default-contacts").button().click(() => contactsHandler.restoreDefaultContacts())
+  $("#random-contacts").button().click(() => { 
+    contactsHandler.setRandomContacts() 
+    sliderOrContactsChanged = true
+  })
+
+  $("#default-contacts").button().click(() => { 
+    contactsHandler.restoreDefaultContacts() 
+    sliderOrContactsChanged = true
+  })
 
   $("#metasystem-toggle").button().click(() => {
     renderingHandler.toggleMetasystemMode()
-    renderingHandler.reset()
-    resetHierarchyResetPlot()
+    resetHierarchyAndPlotNewPoint()
   })
 
 });

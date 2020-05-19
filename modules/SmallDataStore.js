@@ -77,7 +77,6 @@ class SmallDataStore {
     // returns nested array [{states1,column1,lightRow1}, ..., {states_n,column_n,lightRow_n}], one element for each state that
     // was dequeued with nothing newer coming in for that state; empty array otherwise
     multiDequeue(toRemove) {
-      console.log(`Multi-dequeueing ${toRemove} items`)
       if (toRemove <= 0) return []
       // an array will map on a null, but not on an undefined...
       let ret = new Array(toRemove).fill(null).map(_ => this.dequeue()).filter( v => v !== null) // for shits and giggles
@@ -109,6 +108,17 @@ class SmallDataStore {
       this.resize(restoreMaxSize)
     }
   
+    // returns an array of { state: [i1,i2,i3,i4], result: { lightNum, aOrB }}
+    getStoredResults() {
+      let curr = this.headMark.prev
+      let storedResults = []
+      while (curr !== this.tailMark) {
+        storedResults.push({ state: curr.states, result: { lightNum: curr.column, aOrB: curr.lightRow }})
+        curr = curr.prev
+      }
+      return storedResults
+    }
+
     // takes an array of [1-10, 1-10, 1-10, 1-10] and returns the corresponding integer in [0, 9999]
     statesToInteger(states) {
       return 1000 * (states[0] - 1) + 100 * (states[1] - 1) + 10 * (states[2] - 1) + (states[3] - 1)
