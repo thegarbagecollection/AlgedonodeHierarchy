@@ -98,7 +98,7 @@ class DataHandler {
       }
     }
  
-    plotNewPoint(algHierarchy) {
+    displayNewPoint(algHierarchy) {
       if (this.currentPlotHandler === this.fullPlotHandler) {
         this.clearPlotGraphic()
         this.partialPlotHandler.restorePlot()
