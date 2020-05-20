@@ -39,22 +39,21 @@ $( function() {
   let dataPointLabelSetter = (newStoreSpace) => $("#labelDataPoints").text(`Data point store space: ${newStoreSpace}`)
   let dataHandler = new DataHandler(dataStore, barChart, statePlot, dataPointLabelSetter)
 
-  let resetHierarchyAndPlotNewPoint = () => { 
-    renderingHandler.reset()
-    dataHandler.drawAxes()
+  let rerenderHierarchyAndPlotNewPoint = () => { 
+    renderingHandler.rerenderAndPropagate()
     dataHandler.plotNewPoint(algHierarchy)
   }
 
   
-  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), resetHierarchyAndPlotNewPoint)
+  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), rerenderHierarchyAndPlotNewPoint)
 
-  let contactsHandler = new ContactsHandler(algHierarchy, resetHierarchyAndPlotNewPoint)
+  let contactsHandler = new ContactsHandler(algHierarchy, rerenderHierarchyAndPlotNewPoint)
   algHierarchy.setupConnections(contactsHandler)
 
   let sliderOrContactsChanged = true // force a full render of the full plot first time
   
-
-  resetHierarchyAndPlotNewPoint()
+  dataHandler.drawAxes()
+  rerenderHierarchyAndPlotNewPoint()
 
   for (let i = 0; i < 8; i++) {
     $( "#vslide" + i ).slider({
@@ -67,7 +66,7 @@ $( function() {
         sliderOrContactsChanged = true
         let newStripPos = convert100RangeToSliderShift(ui.value)
         algHierarchy.moveStrip(i, newStripPos)
-        resetHierarchyAndPlotNewPoint()
+        rerenderHierarchyAndPlotNewPoint()
       }
       });
   }
@@ -98,7 +97,7 @@ $( function() {
       change: function ( v ) {
         let rounded = Math.round(v) // needed because it otherwise updates with intermediate float values...
         algHierarchy.setDialValue(i, rounded)
-        resetHierarchyAndPlotNewPoint()
+        rerenderHierarchyAndPlotNewPoint()
       }
   });
   }
@@ -111,7 +110,7 @@ $( function() {
       $("#dial" + i).val(rn).trigger('change')
       algHierarchy.setDialValue(i, rn)
     }
-    resetHierarchyAndPlotNewPoint()
+    rerenderHierarchyAndPlotNewPoint()
   })
 
   $("#draw-plot").button()
@@ -256,7 +255,7 @@ $( function() {
 
   $("#metasystem-toggle").button().click(() => {
     renderingHandler.toggleMetasystemMode()
-    resetHierarchyAndPlotNewPoint()
+    rerenderHierarchyAndPlotNewPoint()
   })
 
 });

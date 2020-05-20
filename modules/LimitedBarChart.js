@@ -36,7 +36,6 @@ class LimitedBarChart {
     }) // one per column
     this.totalFrequencyData = { A: 0, B: 0 }
     this.totalFrequencyDataCount = 0
-
     this.stateMapping = new Array(10000).fill(null)
   }
 
@@ -76,7 +75,10 @@ class LimitedBarChart {
       }
     }
 
-    this.drawBarAndFrequency(newPoint ? newPoint.column : null, removedPoint ? removedPoint.column : null)
+    // Minor issue here - if we only replot the *explicitly* changed columns, but the overall data count (frequency)
+    // has increased or decreased, we'll need to redraw all the other columns to compensate...
+    // so we may as well just redraw the whole shebang, not like it takes long
+    this.redrawBarsAndFrequencies()
   }
 
   addToStored(statesInt, column, lightRow) {
@@ -115,27 +117,14 @@ class LimitedBarChart {
     this.drawFrequency(10, this.barHeight(bCount, total) , this.colourHandler.lightBOn, 0)
   }
 
-  drawBarAndFrequency(columnAddedTo, columnRemovedFrom) {
+  redrawBarsAndFrequencies() {
 
-    // redraw the individual bar columns given, and the total frequencies
-    // only do "removed" if it's not the one added to.
-    // note: a light might be shifting colour within a column, so we still need to render if columnAddedTo = columnRemovedFrom
-    // distinguishing null here, since 0 counts as false
-
-    if (columnRemovedFrom !== null && columnAddedTo !== columnRemovedFrom) {
-      let { A: aCount, B: bCount } = this.barData[columnRemovedFrom]
-      this.drawBars(columnRemovedFrom, aCount, bCount, this.totalFrequencyDataCount)
-    }
-
-    if (columnAddedTo !== null) {
-      let { A: aCount, B: bCount } = this.barData[columnAddedTo]
-      this.drawBars(columnAddedTo, aCount, bCount, this.totalFrequencyDataCount)
-    }
-
-    // total frequencies here
-    // clear total frequencies
-    let totalLightA = this.totalFrequencyData["A"]
-    let totalLightB = this.totalFrequencyData["B"]
+    this.barData.forEach(({A: aCount, B: bCount}, i) => {
+      this.drawBars(i, aCount, bCount, this.totalFrequencyDataCount)
+    })
+    
+    let totalLightA = this.totalFrequencyData[LightType.A]
+    let totalLightB = this.totalFrequencyData[LightType.B]
 
     this.drawFrequencies(totalLightA, totalLightB)
   }
@@ -157,7 +146,6 @@ class LimitedBarChart {
     this.drawLabels([{ label: "A", column: 9 }, { label: "B", column: 10}])
 
     let colLabels = new Array(8).fill(null).map((_, i) => ({ label: `${i + 1}`, column: i }))
-  
     this.drawLabels(colLabels)
 
     this.ctx.beginPath()
@@ -171,8 +159,7 @@ class LimitedBarChart {
 
   fullChart(individualResults, counts, storeCountData) {
     
-    this.ctx.clearRect(0, 0, this.w, this.h)
-    this.drawAxes()
+    this.clearGraphic()
   
     let totalLightA = counts.reduce((acc, { aCount, bCount }) => {
       return acc + aCount
@@ -181,7 +168,7 @@ class LimitedBarChart {
     let totalLightB = counts.reduce((acc, { aCount, bCount }) => {
       return acc + bCount
     }, 0)
-  
+    
     let totalItems = totalLightA + totalLightB
 
     if (storeCountData) {
@@ -199,9 +186,9 @@ class LimitedBarChart {
   }
 
   overwriteData(totalLightA, totalLightB, totalItems, counts, individualResults) {
+    this.clearData() // make sure everything's reinitialised
     this.totalFrequencyData = { A: totalLightA, B: totalLightB }
     this.totalFrequencyDataCount = totalItems
-    this.barData = new Array(8).fill(null).map((_) => ({A: 0, B: 0})) // need to give EVERY column a count!
     counts.forEach( ({aCount, bCount}, i) => { 
       this.barData[i] = { A: aCount, B: bCount } 
     })

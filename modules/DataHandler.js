@@ -34,7 +34,7 @@ class DataHandler {
     }
 
     drawAxes() {
-      this.statePlot.drawAxes()
+      this.statePlot.drawAxes(true)
       this.barChart.drawAxes()
     }
 

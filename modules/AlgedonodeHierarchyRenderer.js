@@ -25,8 +25,8 @@ class AlgedonodeHierarchyRenderer {
       this.label(`${i + 1}`, cX, cY, fontSize)
     }
     let { cX, cY } = this.elementCentre(4.25, -1, this.positionInfo)
-    this.label("A", cX, cY - 0.4 * this.positionInfo.rowHeight, fontSize)
-    this.label("B", cX, cY + 0.5 * this.positionInfo.rowHeight, fontSize)
+    this.label(LightType.A, cX, cY - 0.4 * this.positionInfo.rowHeight, fontSize)
+    this.label(LightType.B, cX, cY + 0.5 * this.positionInfo.rowHeight, fontSize)
   }
 
 

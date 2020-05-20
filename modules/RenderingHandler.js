@@ -23,7 +23,7 @@ class RenderingHandler {
       }
     }
   
-    reset() {
+    rerenderAndPropagate() {
       this.algHierarchy.clear()
       this.algHierarchy.propagateDialValues()
       this.newRender()
