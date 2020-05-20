@@ -5,7 +5,7 @@
 function metasystemButtonFunctions() {
   // return [$("#draw-plot"), $("#default-contacts"), $("#random-contacts")]
   let disabledByMetasystem = [(metasystemMode) => $(".metasystem-disabled").button("option", "disabled", metasystemMode)]
-  let labelFn = (metasystemMode) => $("#metasystem-toggle").button("option", "value", metasystemMode ? "To x-ray view" : "To metasystem view")
+  let labelFn = (metasystemMode) => $("#metasystem-toggle").button("option", "label", metasystemMode ? "To x-ray view" : "To metasystem view")
   let labelledByMetasystemMode = [labelFn] 
   return { disabledByMetasystem, labelledByMetasystemMode }
 }
@@ -213,8 +213,7 @@ $( function() {
       "Yes": function() {
         colourHandler.setToDefault()
         renderingHandler.newRender()
-        let storedResults = dataStore.getStoredResults()
-        dataHandler.fullPlotForColourChange(storedResults)
+        dataHandler.colourChange()
         confirmDefaultColoursDialog.dialog("close")
       },
       "No": function() {
@@ -253,10 +252,13 @@ $( function() {
     sliderOrContactsChanged = true
   })
 
-  $("#metasystem-toggle").button().click(() => {
-    renderingHandler.toggleMetasystemMode()
-    rerenderHierarchyAndPlotNewPoint()
-  })
+  $("#metasystem-toggle")
+    .button()
+    .click(() => {
+      renderingHandler.toggleMetasystemMode()
+      rerenderHierarchyAndPlotNewPoint()
+    })
+    .button("option", "label", "To metasystem view")
 
 });
 

@@ -6,20 +6,20 @@ class DataHandler {
       this.dataPointLabelSetter = dataPointLabelSetter // function: StoreSpace -> String
 
       this.fullPlotHandler = new FullPlotHandler(statePlot, barChart)
-      this.partialPlotHandler = new PartialPlotHandler(statePlot, barChart)
+      this.partialPlotHandler = new PartialPlotHandler(statePlot, barChart, dataStore)
       this.currentPlotHandler = this.partialPlotHandler
     }
   
 
     colourChange() {
       // Re-render what's already there, no need to reset or change the data  
-      this.currentPlotHandler.plot()
+      this.currentPlotHandler.plot(this)
     }
   
     requestCompletePlot(algHierarchy, sliderOrContactsChanged) {
       if (this.currentPlotHandler === this.partialPlotHandler) {
-        let storedIndividualResults = this.dataStore.getStoredResults()
-        this.partialPlotHandler.save(storedIndividualResults, this.computeCountsFromResults(storedIndividualResults))
+        let { storedIndividualResults, counts } = this.getStoredResultsAndCounts()
+        this.partialPlotHandler.save(storedIndividualResults, counts)
         this.currentPlotHandler = this.fullPlotHandler
       }
 
@@ -60,6 +60,12 @@ class DataHandler {
         acc[lightNum] = { aCount: (aOrB === LightType.A ? aCount + 1 : aCount), bCount: (aOrB === LightType.B ? bCount + 1 : bCount)}
         return acc
       }, [])
+    }
+
+    getStoredResultsAndCounts() {
+      let storedIndividualResults = this.dataStore.getStoredResults()
+      let counts = this.computeCountsFromResults(storedIndividualResults)
+      return { storedIndividualResults, counts }
     }
 
     datapointSliderToStoreSpace(sliderVal) {
@@ -127,7 +133,7 @@ class FullPlotHandler {
   }
 
   // assumes that this.current and this.currentCounts both contain data
-  plot() {
+  plot(dataHandler) { // argument for consistency's sake!
     if (this.hasData()) { 
       this.barChart.fullChart(this.currentIndividualResults, this.currentCounts, false)
       this.statePlot.fullPlot(this.currentIndividualResults)
@@ -140,11 +146,12 @@ class FullPlotHandler {
   is stored only when we switch to a full plot
 */
 class PartialPlotHandler {
-  constructor(statePlot, barChart) {
+  constructor(statePlot, barChart, dataStore) {
     this.statePlot = statePlot
     this.barChart = barChart
     this.currentIndividualResults = null
     this.currentCounts = null
+    this.dataStore = dataStore
   }
 
   clearData() {
@@ -161,13 +168,18 @@ class PartialPlotHandler {
     this.currentCounts = counts
   }
 
-  restorePlot() {
+  plot(dataHandler) {
+    this.restorePlot(dataHandler)
+  }
+
+  restorePlot(dataHandler) {
     // what happens when the first action we take is full plot?
     // then restore won't have anything to work with, but that's actually ok!
     // all we want there is to clear and draw the axes
     if (!this.hasData()) {
-      this.currentIndividualResults = []
-      this.currentCounts = []
+      let { storedIndividualResults, counts } = dataHandler.getStoredResultsAndCounts()
+      this.currentIndividualResults = storedIndividualResults
+      this.currentCounts = counts
     }
     
     this.barChart.fullChart(this.currentIndividualResults, this.currentCounts, true)
