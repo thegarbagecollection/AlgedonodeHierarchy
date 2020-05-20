@@ -53,10 +53,10 @@ class LimitedStatePlot {
         //this.ctx.stroke()
       }
     
-      this.statesAxes(drawableLeftS, drawableBottomS, wS, false) // we need this! because of the rectangle erasing hack, it starts eating away at the axes
+      this.drawAxes(drawableLeftS, drawableBottomS, wS, false) // we need this! because of the rectangle erasing hack, it starts eating away at the axes
     }
   
-    statesAxes(drawableLeftS, drawableBottomS, wS, drawText) {
+    drawAxes(drawableLeftS, drawableBottomS, wS, drawText) {
       this.ctx.beginPath()
       this.ctx.strokeStyle = "black"
       this.ctx.moveTo(drawableLeftS - 1, 0)
@@ -102,8 +102,8 @@ class LimitedStatePlot {
         })
         .forEach(({ x, y, result }) => {
           this.ctx.beginPath()
-          this.ctx.strokeStyle = result.aOrB === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
-          this.ctx.fillStyle = result.aOrB === "A" ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+          this.ctx.strokeStyle = result.aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+          this.ctx.fillStyle = result.aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
     
           let adjustedX = drawableLeftS + x * coordOffsetMultX
           let adjustedY = drawableBottomS - (y + 1) * coordOffsetMultY
@@ -113,7 +113,7 @@ class LimitedStatePlot {
           this.ctx.stroke()
         })
     
-      this.statesAxes(drawableLeftS, drawableBottomS, wS, true)
+      this.drawAxes(drawableLeftS, drawableBottomS, wS, true)
     }
     
     clearGraphic() {
@@ -122,7 +122,7 @@ class LimitedStatePlot {
       let hS = this.ctx.canvas.height
       let drawableLeftS = wS * 0.1
       let drawableBottomS = hS * 0.9
-      this.statesAxes(drawableLeftS, drawableBottomS, wS, true)
+      this.drawAxes(drawableLeftS, drawableBottomS, wS, true)
     }
   
   }

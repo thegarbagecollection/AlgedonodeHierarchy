@@ -12,12 +12,11 @@ class LimitedBarChart {
 
     this.w = this.ctx.canvas.width
     this.h = this.ctx.canvas.height
-    this.barColumnW = w / 11.5
-    this.maxDrawH = 0.8 * h
+    this.barColumnW = this.w / 11.5
+    this.maxDrawH = 0.8 * this.h
   }
 
   statesToInteger(states) {
-    // TODO: pull this out
     return 1000 * (states[0] - 1) + 100 * (states[1] - 1) + 10 * (states[2] - 1) + (states[3] - 1)
   }
 
@@ -118,9 +117,7 @@ class LimitedBarChart {
 
   drawBarAndFrequency(columnAddedTo, columnRemovedFrom) {
 
-  
-    // and redraw the bar column and the total frequencies
-
+    // redraw the individual bar columns given, and the total frequencies
     // only do "removed" if it's not the one added to.
     // note: a light might be shifting colour within a column, so we still need to render if columnAddedTo = columnRemovedFrom
     // distinguishing null here, since 0 counts as false
@@ -143,24 +140,25 @@ class LimitedBarChart {
     this.drawFrequencies(totalLightA, totalLightB)
   }
 
-  drawAxes() {
+  // takes { label: String, column: Integer }[]
+  drawLabels(labelsWithPos) {
     this.ctx.beginPath()
     this.ctx.fillStyle = "black"
     this.ctx.font = "" + 0.15 * this.h + "px Arial"
     this.ctx.textAlign = "center"
     this.ctx.textBaseline = "bottom"
-    this.ctx.fillText(`A`, 9 * this.barColumnW + this.barColumnW / 2, 0.99 * this.h)
-    this.ctx.fillText(`B`, 10 * this.barColumnW + this.barColumnW / 2, 0.99 * this.h)
+    labelsWithPos.forEach(({ label, column }) => {
+      this.ctx.fillText(label, column * this.barColumnW + this.barColumnW / 2, 0.99 * this.h)
+    })
     this.ctx.stroke()
-    for (let i = 0; i < 8; i++) {
-      this.ctx.beginPath()
-      this.ctx.fillStyle = "black"
-      this.ctx.font = "" + 0.15 * this.h + "px Arial"
-      this.ctx.textAlign = "center"
-      this.ctx.textBaseline = "bottom"
-      this.ctx.fillText(`${i + 1}`, i * this.barColumnW + this.barColumnW / 2, 0.99 * this.h)
-      this.ctx.stroke()
-    }
+  }
+
+  drawAxes() {
+    this.drawLabels([{ label: "A", column: 9 }, { label: "B", column: 10}])
+
+    let colLabels = new Array(8).fill(null).map((_, i) => ({ label: `${i + 1}`, column: i }))
+  
+    this.drawLabels(colLabels)
 
     this.ctx.beginPath()
     this.ctx.strokeStyle = "black"
@@ -173,16 +171,8 @@ class LimitedBarChart {
 
   fullChart(individualResults, counts, storeCountData) {
     
-    let w = this.ctx.canvas.width
-    let h = this.ctx.canvas.height
-    this.ctx.clearRect(0, 0, w, h)
-  
-    let maxDrawH = 0.8 * h
-  
-    // we need one column for each number, a space, and another 2 columns
-    // for comparing red vs. green
-  
-    let barColumnW = w / 11.5
+    this.ctx.clearRect(0, 0, this.w, this.h)
+    this.drawAxes()
   
     let totalLightA = counts.reduce((acc, { aCount, bCount }) => {
       return acc + aCount
@@ -195,62 +185,28 @@ class LimitedBarChart {
     let totalItems = totalLightA + totalLightB
 
     if (storeCountData) {
-      this.totalFrequencyData = { A: totalLightA, B: totalLightB }
-      this.totalFrequencyDataCount = totalItems
-      this.barData = counts.map( ({aCount, bCount} )=> ({ A: aCount, b: bCount }))
-      individualResults.forEach(({ state, result: { lightNum, aOrB }}) => {
-        this.addToStored(this.statesToInteger(state), lightNum, aOrB)
-      })
+      this.overwriteData(totalLightA, totalLightB, totalItems, counts, individualResults)
     }
 
     for (let i = 0; i < counts.length; i++) {
-      let { aCount, bCount } = counts[i]
-      let rH = (maxDrawH * aCount) / totalItems
-      let gH = (maxDrawH * bCount) / totalItems
-      this.ctx.beginPath()
-      this.ctx.fillStyle = this.colourHandler.lightAOn
-      this.ctx.fillRect(i * barColumnW + barColumnW / 9, maxDrawH - rH, barColumnW / 2 - barColumnW / 9, rH)
-      this.ctx.stroke()
-  
-      this.ctx.beginPath()
-      this.ctx.fillStyle = this.colourHandler.lightBOn
-      this.ctx.fillRect(i * barColumnW + barColumnW / 2, maxDrawH - gH, barColumnW / 2 - barColumnW / 9, gH)
-      this.ctx.stroke()
-  
-      this.ctx.beginPath()
-      this.ctx.fillStyle = "black"
-      this.ctx.font = "" + 0.15 * h + "px Arial"
-      this.ctx.textAlign = "center"
-      this.ctx.textBaseline = "bottom"
-      this.ctx.fillText(`${i + 1}`, i * barColumnW + barColumnW / 2, 0.99 * h)
-      this.ctx.stroke()
+      if (counts[i]) {
+        let { aCount, bCount } = counts[i]
+        this.drawBars(i, aCount, bCount, totalItems)
+      }
     }
   
-    this.ctx.beginPath()
-    this.ctx.strokeStyle = "black"
-    this.ctx.moveTo(0, maxDrawH * 1.01)
-    this.ctx.lineTo(w, maxDrawH * 1.01)
-    this.ctx.moveTo(8 * barColumnW + barColumnW / 2, h)
-    this.ctx.lineTo(8 * barColumnW + barColumnW / 2, 0)
-    this.ctx.stroke()
-  
-    this.ctx.beginPath()
-    this.ctx.fillStyle = this.colourHandler.lightAOn
-    this.ctx.fillRect(9 * barColumnW + barColumnW / 9, maxDrawH - (maxDrawH * totalLightA) / totalItems, barColumnW - barColumnW / 9, (maxDrawH * totalLightA) / totalItems)
-    this.ctx.stroke()
-  
-    this.ctx.beginPath()
-    this.ctx.fillStyle = this.colourHandler.lightBOn
-    this.ctx.fillRect(10 * barColumnW, maxDrawH - (maxDrawH * totalLightB) / totalItems, barColumnW - barColumnW / 9, (maxDrawH * totalLightB) / totalItems)
-    this.ctx.stroke()
-  
-    this.ctx.beginPath()
-    this.ctx.fillStyle = "black"
-    this.ctx.font = "" + 0.15 * h + "px Arial"
-    this.ctx.textAlign = "center"
-    this.ctx.textBaseline = "bottom"
-    this.ctx.fillText(`A`, 9 * barColumnW + barColumnW / 2, 0.99 * h)
-    this.ctx.fillText(`B`, 10 * barColumnW + barColumnW / 2, 0.99 * h)
-    this.ctx.stroke()
+    this.drawFrequencies(totalLightA, totalLightB)
+  }
+
+  overwriteData(totalLightA, totalLightB, totalItems, counts, individualResults) {
+    this.totalFrequencyData = { A: totalLightA, B: totalLightB }
+    this.totalFrequencyDataCount = totalItems
+    this.barData = new Array(8).fill(null).map((_) => ({A: 0, B: 0})) // need to give EVERY column a count!
+    counts.forEach( ({aCount, bCount}, i) => { 
+      this.barData[i] = { A: aCount, B: bCount } 
+    })
+    individualResults.forEach(({ state, result: { lightNum, aOrB }}) => {
+      this.addToStored(this.statesToInteger(state), lightNum, aOrB)
+    })
   }
 }
