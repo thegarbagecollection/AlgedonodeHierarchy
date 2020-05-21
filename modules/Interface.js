@@ -4,10 +4,10 @@
 
 $(function() {
   // Which buttons are enabled / disabled, or have a label change, by a change in metasystem mode?
-  const { disabledByMetasystem, labelledByMetasystemMode } = metasystemButtonFunctions()
+  const { disabledByMetasystem, labelledByViewMode } = viewModeButtonFunctions()
 
   const { algHierarchy, dataStore, barChart, statePlot, colourHandler } = initialiseMainComponents()
-  const renderingHandler = new RenderingHandler(algHierarchy, disabledByMetasystem, labelledByMetasystemMode)
+  const renderingHandler = new RenderingHandler(algHierarchy, disabledByMetasystem, labelledByViewMode)
 
   // Function Integer -> (), should set the stored data point count label
   const dataPointLabelSetter = (newStoreSpace) => $("#label-data-store-size").text(`Data point store space: ${newStoreSpace}`)
@@ -265,13 +265,10 @@ $(function() {
 
 
 /**
+ * @function
  * Initialises the main components of the app, and returns the ones that will 
  * be used elsewhere
- * @returns {{ algHierarchy: AlgedonodeHierarchy, 
- * dataStore: SmallDataStore, 
- * barChart: LimitedBarChart, 
- * statePlot: LimitedStatePlot, 
- * colourHandler: ColourHandler }} the main components
+ * @returns {{ algHierarchy: AlgedonodeHierarchy, dataStore: SmallDataStore, barChart: LimitedBarChart, statePlot: LimitedStatePlot, colourHandler: ColourHandler }} the main components
  */
 function initialiseMainComponents() {
   let dataStore = new SmallDataStore(InitialValues.DATA_STORE_SIZE)
@@ -298,18 +295,29 @@ function initialiseMainComponents() {
   return { algHierarchy, dataStore, barChart, statePlot, colourHandler }
 }
 
+
+
 /**
- * 
- * @returns {{disabledByMetasystem: Function, labelledByMetasystemMode: Array }} 
- * disabledByMetasystem is a function Boolean -> () which disables every DOM element with the ".metasystem-disabled" class;
- * labelledByMetasystemMode is an array of functions Boolean -> () which, given a metasystem mode, will assign a label based on that 
- * metasystem mode to some DOM element
+ * @description When run, sets all DOM elements with class "metasystem-disabled" to be disabled if the metasystem is enabled, and
+ * enabled if metasystem mode is disabled
+ * @callback MetasystemButtonDisabler
+ * @param {ViewMode} viewMode
  */
-function metasystemButtonFunctions() {
-  let disabledByMetasystem = (metasystemMode) => $(".metasystem-disabled").button("option", "disabled", metasystemMode)
-  let labelFn = (metasystemMode) => $("#metasystem-toggle").button("option", "label", metasystemMode ? "To x-ray view" : "To metasystem view")
-  let labelledByMetasystemMode = [labelFn] 
-  return { disabledByMetasystem, labelledByMetasystemMode }
+/**
+ * @description When run, labels a DOM element (or set of DOM elements) according to the current view mode (metasystem enabled / disabled)
+ * @callback ViewModeElementLabeller
+ * @param {ViewMode} viewMode
+ */
+/**
+ * @returns {{disabledByMetasystem: MetasystemButtonDisabler, labelledByViewMode: Array<ViewModeElementLabeller> }} 
+ * a metasystemButtonDisabler and an array of metasystemElementLabellers, all functions taking a ViewMode,
+ * which will be passed whether the system is currently in metasystem mode or not 
+ */
+function viewModeButtonFunctions() {
+  let disabledByMetasystem = (viewMode) => $(".metasystem-disabled").button("option", "disabled", ViewModes.disableElement(viewMode))
+  let labelFn = (viewMode) => $("#metasystem-toggle").button("option", "label", ViewModes.disableElement(viewMode) ? "To x-ray view" : "To metasystem view")
+  let labelledByViewMode = [labelFn] 
+  return { disabledByMetasystem, labelledByViewMode }
 }
 
 /**
@@ -326,17 +334,22 @@ function convert100RangeToSliderShift(input) {
 }
 
 /**
- * @param {*} n 
+ * @param {Number} n 
  * @returns {Number} random integer in {1,...,n}
  */
 function rnd(n) {
   return Math.floor(Math.random() * n) + 1
 }
 
+
 /**
- * 
+ * @callback DialSetterCallback
+ * @param {Number} dialNum the dial number to set
+ * @param {Number} value the value (from 1-10 inclusive) to set the dial to
+ */
+/**
  * @param {AlgedonodeHierarchy} algHierarchy the app's algedonode hierarchy
- * @returns {Function} function (dialNum: Integer, value: Integer) -> () which sets dial numbered dialNum to
+ * @returns {DialSetterCallback} callback which sets dial numbered dialNum to
  * the given value, both in the interface and within the algedonode hierarchy, 
  * possibly causing changes to the algedonode hierarchy's output state
  */
@@ -346,3 +359,4 @@ function setDial(algHierarchy) {
     algHierarchy.setDialValue(dialNum, value)
   }
 }
+
