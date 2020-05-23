@@ -1,5 +1,16 @@
+/**
+ * @typedef { [number, number, number, number] } DialState
+ * 
+ */
+
+
 // takes an array [x1,...,xn], returns the nested arrays [[x_1,...,x_p],[x_{p+1},...,x_{2p}],...]
 // where p is partitionSize
+/**
+ * 
+ * @param {*} array 
+ * @param {*} partitionSize 
+ */
 function partitionArray(array, partitionSize) {
   let ret = []
   let partition = []
@@ -17,9 +28,7 @@ function partitionArray(array, partitionSize) {
 }
 
 /**
- * @name AlgedonodeHierarchy
- * 
- * 
+ *  
  */
 class AlgedonodeHierarchy {
   // takes an AlgedonodeHierarchyRenderer

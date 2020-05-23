@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 class DataHandler {
     constructor(dataStore, barChart, statePlot, dataPointLabelSetter) {
       this.dataStore = dataStore
@@ -90,12 +93,6 @@ class DataHandler {
           this.barChart.changePoint(null, pointRemoved)
         })
       }
-      else if (removed && this.currentPlotHandler === this.fullPlotHandler)  { // we're removing while a full plot is displayed
-        // is this actually necessary?? when we switch back to the partialPlotHandler, however it happens,
-        // we're going to need to get the current information out of the dataStore, render it to the chart and store the counts,
-        // and render it to the plot. so i guess... not?
-        // this.barChart.removePointWithoutPlotting(pointRemoved)
-      }
     }
  
     displayNewPoint(algHierarchy) {
@@ -186,6 +183,12 @@ class PartialPlotHandler {
     this.statePlot.fullPlot(this.currentIndividualResults)
   }
 
+  /**
+   * 
+   * @param {*} algHierarchy 
+   * @param {*} dataStore 
+   * @todo could maybe have a callback to get the data from the alg hierarchy, rather than access directly
+   */
   plotNewPoint(algHierarchy, dataStore) {
     let states = algHierarchy.dials.map(dial => dial.getDialValue())
     let illum = algHierarchy.getIlluminatedLight()

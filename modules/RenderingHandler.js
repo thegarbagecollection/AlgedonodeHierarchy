@@ -1,5 +1,5 @@
 /**
- * Enum for view mode of algedonode hierarchy - metasystem or see everything (x-ray)?
+ * View mode of algedonode hierarchy - metasystem's view, or see everything (x-ray)?
  * @readonly
  * @enum { ViewMode }
  */
@@ -33,7 +33,7 @@ const ViewModes = {
    * @param {ViewMode} viewMode to convert
    * @returns {Boolean} true if METASYSTEM, false if XRAY, corresponding to whether or not an element should be disabled
    */
-  disableElement(viewMode) {
+  toBool(viewMode) {
     return viewMode === ViewModes.METASYSTEM
   },
 }
@@ -57,13 +57,19 @@ class RenderingHandler {
     this.buttonsLabelledFns = buttonsLabelledFns
   }
 
-  
-  toggleMetasystemMode() {
+  /**
+  * Flips between metasystem and xray views of the algedonode hierarchy, running the functions passed in at construction
+  * to handle various UI features
+  */
+  toggleViewMode() {
     this.viewMode = ViewModes.toggle(this.viewMode)
     this.buttonsDisabledFn(this.viewMode)
     this.buttonsLabelledFns.forEach(label => label(this.viewMode))
   }
 
+  /**
+   * Clear the algedonode hierarchy rendering, and re-render using the current view mode.
+   */
   newRender() {
     this.algHierarchy.clearRenderer()
     switch (this.viewMode) {
@@ -76,6 +82,10 @@ class RenderingHandler {
     }
   }
 
+  /**
+   * Clear the currently activated elements in the algedonode hierarchy, propagate the dial
+   * values, activating appropriate elements to turn another light on, then re-render the hierarchy.
+   */
   rerenderAndPropagate() {
     this.algHierarchy.clear()
     this.algHierarchy.propagateDialValues()
@@ -84,7 +94,7 @@ class RenderingHandler {
 }
 
 
-// Hack to get ViewMode to show up in the documentation
+// Hack to get ViewMode to show up in the documentation as a type
 /**
  * @class
  */

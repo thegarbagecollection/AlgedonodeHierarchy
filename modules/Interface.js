@@ -14,15 +14,11 @@ $(function() {
 
   const dataHandler = new DataHandler(dataStore, barChart, statePlot, dataPointLabelSetter)
 
-  // To force rerendering of algedonode hierarchy, and then display the current dial contents
-  const rerenderHierarchyAndPlotNewPoint = () => { 
-    renderingHandler.rerenderAndPropagate()
-    dataHandler.displayNewPoint(algHierarchy)
-  }
+  const rerenderAndPlot = rerenderHierarchyAndPlotNewPoint(algHierarchy, dataHandler, renderingHandler)
 
-  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), rerenderHierarchyAndPlotNewPoint)
+  let playModeHandler = new PlayModeHandler(setDial(algHierarchy), rerenderAndPlot)
 
-  let contactsHandler = new ContactsHandler(algHierarchy, rerenderHierarchyAndPlotNewPoint)
+  let contactsHandler = new ContactsHandler(algHierarchy, rerenderAndPlot)
   algHierarchy.setupConnections(contactsHandler)
 
   // if the slider or contacts have changed since the last full plot, we can't rely on the 
@@ -31,7 +27,7 @@ $(function() {
   
   // First display of window - draw axes for data graphics, draw hierarchy, plot result of starting state (1,1,1,1)
   dataHandler.drawAxes()
-  rerenderHierarchyAndPlotNewPoint()
+  rerenderAndPlot()
 
   /**************************************************************
    *  STRIP SLIDER
@@ -48,7 +44,7 @@ $(function() {
         let newStripPos = convert100RangeToSliderShift(ui.value)
         algHierarchy.moveStrip(i, newStripPos)
         // if a slider changes, we want to make sure a possible different output from the same state is rendered
-        rerenderHierarchyAndPlotNewPoint() 
+        rerenderAndPlot() 
       }
       });
   }
@@ -71,7 +67,7 @@ $(function() {
       change: function ( v ) {
         let rounded = Math.round(v) // needed because it otherwise updates with intermediate float values...
         algHierarchy.setDialValue(i, rounded)
-        rerenderHierarchyAndPlotNewPoint()
+        rerenderAndPlot()
       }
   });
   }
@@ -96,8 +92,8 @@ $(function() {
   $("#metasystem-toggle")
     .button()
     .click(() => {
-      renderingHandler.toggleMetasystemMode()
-      rerenderHierarchyAndPlotNewPoint()
+      renderingHandler.toggleViewMode()
+      rerenderAndPlot()
     })
     .button("option", "label", "To metasystem view")
 
@@ -113,7 +109,7 @@ $(function() {
       algHierarchy.setDialValue(i, rn)
     }
     // programmatically setting a new dial value requires propagating and rendering the changes
-    rerenderHierarchyAndPlotNewPoint()
+    rerenderAndPlot()
   })
   $("#play-sequence").click(() => playModeHandler.playSequence())
   $("#play-random").click(() => playModeHandler.playRandom())
@@ -265,7 +261,6 @@ $(function() {
 
 
 /**
- * @function
  * Initialises the main components of the app, and returns the ones that will 
  * be used elsewhere
  * @returns {{ algHierarchy: AlgedonodeHierarchy, dataStore: SmallDataStore, barChart: LimitedBarChart, statePlot: LimitedStatePlot, colourHandler: ColourHandler }} the main components
@@ -302,11 +297,13 @@ function initialiseMainComponents() {
  * enabled if metasystem mode is disabled
  * @callback MetasystemButtonDisabler
  * @param {ViewMode} viewMode
+ * @returns {void}
  */
 /**
  * @description When run, labels a DOM element (or set of DOM elements) according to the current view mode (metasystem enabled / disabled)
  * @callback ViewModeElementLabeller
  * @param {ViewMode} viewMode
+ * @returns {void}
  */
 /**
  * @returns {{disabledByMetasystem: MetasystemButtonDisabler, labelledByViewMode: Array<ViewModeElementLabeller> }} 
@@ -314,8 +311,8 @@ function initialiseMainComponents() {
  * which will be passed whether the system is currently in metasystem mode or not 
  */
 function viewModeButtonFunctions() {
-  let disabledByMetasystem = (viewMode) => $(".metasystem-disabled").button("option", "disabled", ViewModes.disableElement(viewMode))
-  let labelFn = (viewMode) => $("#metasystem-toggle").button("option", "label", ViewModes.disableElement(viewMode) ? "To x-ray view" : "To metasystem view")
+  let disabledByMetasystem = (viewMode) => $(".metasystem-disabled").button("option", "disabled", ViewModes.toBool(viewMode))
+  let labelFn = (viewMode) => $("#metasystem-toggle").button("option", "label", ViewModes.toBool(viewMode) ? "To x-ray view" : "To metasystem view")
   let labelledByViewMode = [labelFn] 
   return { disabledByMetasystem, labelledByViewMode }
 }
@@ -335,7 +332,7 @@ function convert100RangeToSliderShift(input) {
 
 /**
  * @param {Number} n 
- * @returns {Number} random integer in {1,...,n}
+ * @returns {Number} random integer in 1,...,n inclusive
  */
 function rnd(n) {
   return Math.floor(Math.random() * n) + 1
@@ -346,6 +343,7 @@ function rnd(n) {
  * @callback DialSetterCallback
  * @param {Number} dialNum the dial number to set
  * @param {Number} value the value (from 1-10 inclusive) to set the dial to
+ * @returns {void}
  */
 /**
  * @param {AlgedonodeHierarchy} algHierarchy the app's algedonode hierarchy
@@ -359,4 +357,28 @@ function setDial(algHierarchy) {
     algHierarchy.setDialValue(dialNum, value)
   }
 }
+
+
+/**
+ * When invoked, rerenders the algedonode hierarchy, propagating the current dial values, then
+ * displays the result in data graphics
+ * @callback RerenderAndPlotCallback
+ * @returns {void}
+ */
+/**
+ * Given a hierarchy, a data handler, and a rendering handler, returns a callback to propagate values,
+ * rerender, and plot the result
+ * @param {AlgedonodeHierarchy} algHierarchy 
+ * @param {DataHandler} dataHandler 
+ * @param {RenderingHandler} renderingHandler 
+ * @returns {RerenderAndPlotCallback}
+ */
+function rerenderHierarchyAndPlotNewPoint(algHierarchy, dataHandler, renderingHandler) { 
+  return () => {
+    renderingHandler.rerenderAndPropagate()
+    dataHandler.displayNewPoint(algHierarchy) 
+  }
+}
+
+
 
