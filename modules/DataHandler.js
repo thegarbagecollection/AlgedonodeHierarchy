@@ -190,7 +190,7 @@ class PartialPlotHandler {
    * @todo could maybe have a callback to get the data from the alg hierarchy, rather than access directly
    */
   plotNewPoint(algHierarchy, dataStore) {
-    let states = algHierarchy.dials.map(dial => dial.getDialValue())
+    let states = algHierarchy.getDialStates()
     let illum = algHierarchy.getIlluminatedLight()
     if (illum !== null) {
       let { column, lightRow } = illum

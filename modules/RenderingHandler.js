@@ -17,6 +17,7 @@ const ViewModes = {
    * Switches between view modes
    * @param {ViewMode} viewMode the view mode to return the opposite of
    * @returns {ViewMode} the opposite view mode
+   * @protected
    */
   toggle(viewMode) {
     switch (viewMode) {
@@ -32,6 +33,7 @@ const ViewModes = {
   /**
    * @param {ViewMode} viewMode to convert
    * @returns {Boolean} true if METASYSTEM, false if XRAY, corresponding to whether or not an element should be disabled
+   * @protected
    */
   toBool(viewMode) {
     return viewMode === ViewModes.METASYSTEM
@@ -49,6 +51,7 @@ class RenderingHandler {
    * disables all buttons that the metasystem doesn't need; and when called with ViewModes.XRAY, re-enables those buttons
    * @param {ViewModeElementLabeller} buttonsLabelledFns functions that, when called with ViewMode.METASYSTEM, set
    * the label on buttons to show the metasystem mode is active, and the opposite when called with ViewModes.XRAY
+   * @public
    */
   constructor(algHierarchy, buttonsDisabledFn, buttonsLabelledFns) {
     this.viewMode = ViewModes.XRAY
@@ -60,6 +63,7 @@ class RenderingHandler {
   /**
   * Flips between metasystem and xray views of the algedonode hierarchy, running the functions passed in at construction
   * to handle various UI features
+  * @public
   */
   toggleViewMode() {
     this.viewMode = ViewModes.toggle(this.viewMode)
@@ -69,6 +73,7 @@ class RenderingHandler {
 
   /**
    * Clear the algedonode hierarchy rendering, and re-render using the current view mode.
+   * @public
    */
   newRender() {
     this.algHierarchy.clearRenderer()
@@ -85,6 +90,7 @@ class RenderingHandler {
   /**
    * Clear the currently activated elements in the algedonode hierarchy, propagate the dial
    * values, activating appropriate elements to turn another light on, then re-render the hierarchy.
+   * @public
    */
   rerenderAndPropagate() {
     this.algHierarchy.clear()

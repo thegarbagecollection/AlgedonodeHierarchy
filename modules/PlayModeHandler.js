@@ -27,6 +27,7 @@ class PlayModeHandler {
   /**
    * @param {DialSetterCallback} dialSetterFn sets the given dial to the given state in 1-10
    * @param {RerenderAndPlotCallback} rerenderFn when called, clears the dial settings, propagates a new state, re-renders, then plots the result
+   * @public
    */
   constructor(dialSetterFn, rerenderFn) {
     this.playInterval = null // stores the interval cancellation handle
@@ -88,6 +89,7 @@ class PlayModeHandler {
 
   /**
    * Stops the timed state transition if playing
+   * @public
    */
   stop() {
     if (this.playInterval) {
@@ -157,7 +159,8 @@ class PlayModeHandler {
   }
 
   /**
-   * 
+   * Change playback speed to new value, start playing at that speed in the
+   * play mode currently set
    * @param {Number} newSpeed new speed to set playback to, in range 1 to 100 inclusive
    * @public
    */

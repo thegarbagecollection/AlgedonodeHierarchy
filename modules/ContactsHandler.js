@@ -1,51 +1,109 @@
-
+/**
+ * Deals with changing (and resetting) the contact positioning within the algedonode hierarchy;
+ * contains default positions. Contacts are measured within the range -0.49 to 0.49, where the
+ * centre of the algedonode (and starting mid-point between the brass pad pair) is 0, each
+ * pad is of height 1; and the strip can move -0.5 to 0.5 up and down. The contacts, then, will
+ * always be on one of the two pads
+ * 
+ * Contact positions: a nested array, 4 rows, 8 columns, where each entry is an array containing all the 
+ * contact positions for that algedonode; rows are indexed by number of contacts for the algedonodes in that row: 1->1, 2->2, 3->4, 4->8
+ * 
+ * @todo might be nice to have contacts settable manually
+ */
 class ContactsHandler {
-    constructor(algHierarchy, resetFn) {
-      const contactsDefault2 = [-0.49, 0.49]
-      const contactsDefault4 = [-0.49, -0.16, 0.16, 0.49 ]
-      const contactsDefault8 = [-0.49, -0.35, -0.21, -0.07, 0.07, 0.21, 0.35 , 0.49]
-  
-      this.contactsDefault = {
-        "1": [-0.49, 0.49, -0.49, 0.49, -0.49, 0.49, -0.49, 0.49],
-        "2": [contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2],
-        "4": [contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4],
-        "8": [contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8],
-      }
-      this.contactsCurrent = { ...this.contactsDefault }
-      this.algHierarchy = algHierarchy
-      this.resetFn = resetFn
+  /**
+   * @param {AlgedonodeHierarchy} algHierarchy algedonode hierarchy to control the contacts for
+   * @param {RerenderAndPlotCallback} rerenderFn when called, clears the dial settings, propagates a new state, re-renders, then plots the result
+   * @public
+   */
+  constructor(algHierarchy, rerenderFn) {
+    // standard spacings for contacts on first row: 1 contact per algedonode, on alternating pads across the row
+    const contactsDefault1Off = [-0.49]
+    const contactsDefault1On = [0.49]
+
+    // standard spacing for contacts on second row: 2 contacts per algedonode, 1 per pad
+    const contactsDefault2 = [-0.49, 0.49]
+
+    // standard spacing for contacts on third row: 4 contacts per algedonode, 2 on each pad, medium distance
+    const contactsDefault4 = [-0.49, -0.16, 0.16, 0.49]
+
+    // standard spacing for contacts on fourth row: 8 contacts per algedonode, 4 on each pad, small distance
+    const contactsDefault8 = [-0.49, -0.35, -0.21, -0.07, 0.07, 0.21, 0.35, 0.49]
+
+    /**
+     * Default contact positions for each row: a nested array, 4 rows, 8 columns, where each entry is an array containing all the 
+     * contact positions for that algedonode; each row is indexed as the number of contacts needed per algedonode on that row
+     */
+    this.contactsDefault = {
+      "1": [contactsDefault1Off, contactsDefault1On, contactsDefault1Off, contactsDefault1On, contactsDefault1Off, contactsDefault1On, contactsDefault1Off, contactsDefault1On], 
+      "2": [contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2, contactsDefault2],
+      "4": [contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4, contactsDefault4],
+      "8": [contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8, contactsDefault8],
     }
-  
-    // returns a list of n random contact positions in [-0.49, 0.49]
-    randomContactPositions(n) {
-      return new Array(n).fill(null).map(_ => Math.random() * 0.98 - 0.49)
-    }
-  
-    // returns an 8-list of lists of n random contact positions in [-0.49, 0.49]
-    randomContactPositions8(n) {
-      return new Array(8).fill(null).map(_ => this.randomContactPositions(n))
-    }
-  
-    setRandomContacts() {
-      this.contactsCurrent[1] = this.randomContactPositions(8)
-      this.contactsCurrent[2] = this.randomContactPositions8(2)
-      this.contactsCurrent[4] = this.randomContactPositions8(4)
-      this.contactsCurrent[8] = this.randomContactPositions8(8)
-      this.algHierarchy.setNewContactPositions(this)
-      this.resetFn()
-    }
-  
-    restoreDefaultContacts() {
-      this.contactsCurrent = { ...this.contactsDefault }
-      this.algHierarchy.setNewContactPositions(this)
-      this.resetFn()
-    }
-  
-    getContactsCurrent() {
-      return this.contactsCurrent
-    }
-  
-    getContactsDefault() {
-      return this.contactsDefault
-    }
+    this.contactsCurrent = { ...this.contactsDefault }
+    this.algHierarchy = algHierarchy
+    this.rerenderFn = rerenderFn
   }
+
+  /**
+   * @typedef {Array.<Number>} ContactArray
+   */
+  /**
+   * @param {Number} n an integer
+   * @returns {ContactArray} an array of n random contact positions in range -0.49 to 0.49
+   * @protected
+   */
+  randomContactPositions(n) {
+    return new Array(n).fill(null).map(_ => Math.random() * 0.98 - 0.49)
+  }
+
+  /**
+   * @param {Number} n an integer
+   * @returns {[ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray]} an 8-element array, 
+   * where each element is an array of n random contact positions in range -0.49 to 0.49; one array per column
+   * @protected
+   */
+  randomContactPositions8(n) {
+    return new Array(8).fill(null).map(_ => this.randomContactPositions(n))
+  }
+
+  /**
+   * Randomises contact positions; resets, propagates dial values, then re-renders hierarchy
+   * @public
+   */
+  setRandomContacts() {
+    this.contactsCurrent[1] = this.randomContactPositions8(1)
+    this.contactsCurrent[2] = this.randomContactPositions8(2)
+    this.contactsCurrent[4] = this.randomContactPositions8(4)
+    this.contactsCurrent[8] = this.randomContactPositions8(8)
+    this.algHierarchy.setNewContactPositions(this)
+    this.rerenderFn()
+  }
+
+  /**
+   * Restores default contact positions; resets, propagates dial values, then re-renders hierarchy
+   * @public
+   */
+  restoreDefaultContacts() {
+    this.contactsCurrent = { ...this.contactsDefault }
+    this.algHierarchy.setNewContactPositions(this)
+    this.rerenderFn()
+  }
+
+  /**
+   * @returns {ContactArray} all the current contact positions; 
+   * @public
+   */
+  getContactsCurrent() {
+    return this.contactsCurrent
+  }
+
+  /**
+   * @returns {ContactArray} all the default contact positions; 4 rows, 8 columns, each entry is an array containing all the 
+   * contact positions for that algedonode, EXCEPT for the first row where we have each entry as the contact position directly
+   * @public
+   */
+  getContactsDefault() {
+    return this.contactsDefault
+  }
+}

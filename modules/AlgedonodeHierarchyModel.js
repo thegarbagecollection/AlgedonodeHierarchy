@@ -1,6 +1,5 @@
 /**
- * @typedef { [number, number, number, number] } DialState
- * 
+ * @typedef { [number, number, number, number] } DialStates
  */
 
 
@@ -202,6 +201,10 @@ class AlgedonodeHierarchy {
     this.dials[dial].setDialValue(value)
   }
 
+  getDialStates() {
+    return this.dials.map(dial => dial.getDialValue())
+  }
+
   propagateDialValues() {
     this.dials.forEach(dial => {
       dial.propagateValue()
@@ -400,13 +403,13 @@ class Algedonode {
   }
 
   setNewContactPositions(contactsCurrent) {
-    if (this.row !== 0) {
-      this.contacts.forEach((contact, i) => {
-        contact.setPosition(contactsCurrent[this.contactCount][this.column][i])
-      })
-    } else {
-      this.contacts[0].setPosition(contactsCurrent[this.contactCount][this.column])
-    }
+    this.contacts.forEach((contact, i) => {
+      contact.setPosition(contactsCurrent[this.contactCount][this.column][i])
+    })
+    // } else {
+    //   // there's only the one contact, which we set directly from the corresponding value
+    //   this.contacts[0].setPosition(contactsCurrent[this.contactCount][this.column])
+    // }
   }
 }
 
