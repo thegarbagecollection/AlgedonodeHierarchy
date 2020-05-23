@@ -21,7 +21,7 @@ class LimitedStatePlot {
     if (newPoint) {
       let { states: statesNew, column: columnNew, lightRow: lightRowNew } = newPoint
       let { x, y } = this.getXY(statesNew)
-      let colour = lightRowNew === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+      let colour = lightRowNew === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
       this.drawPoint(x, y, colour)
     }
 
@@ -81,7 +81,7 @@ class LimitedStatePlot {
         return { x, y, result }
       })
       .forEach(({ x, y, result }) => {
-        let colour = result.aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+        let colour = result.aOrB === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
         this.drawPoint(x, y, colour)
       })
   }

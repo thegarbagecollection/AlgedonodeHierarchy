@@ -6,7 +6,8 @@
  * always be on one of the two pads
  * 
  * Contact positions: a nested array, 4 rows, 8 columns, where each entry is an array containing all the 
- * contact positions for that algedonode; rows are indexed by number of contacts for the algedonodes in that row: 1->1, 2->2, 3->4, 4->8
+ * contact positions for that algedonode; rows are indexed by number of contacts for each algedonode in 
+ * that row: 1->1, 2->2, 3->4, 4->8
  * 
  * @todo might be nice to have contacts settable manually
  */
@@ -91,7 +92,7 @@ class ContactsHandler {
   }
 
   /**
-   * @returns {ContactArray} all the current contact positions; 
+   * @returns {ContactArray} all the current contact positions
    * @public
    */
   getContactsCurrent() {
@@ -99,8 +100,7 @@ class ContactsHandler {
   }
 
   /**
-   * @returns {ContactArray} all the default contact positions; 4 rows, 8 columns, each entry is an array containing all the 
-   * contact positions for that algedonode, EXCEPT for the first row where we have each entry as the contact position directly
+   * @returns {ContactArray} all the default contact positions
    * @public
    */
   getContactsDefault() {

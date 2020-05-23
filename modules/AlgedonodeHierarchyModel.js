@@ -1,14 +1,31 @@
 /**
  * @typedef { [number, number, number, number] } DialStates
  */
+/**
+ * @typedef { { state: DialStates, result: { lightNum: Number, aOrB: LightTypes } } } SimulationResult
+ */
 
+
+/**
+ * 
+ */
+const LightTypes = {
+  A: "A",
+  B: "B",
+}
+
+const ActivationSources = {
+  NONE: "NONE",
+  DIAL_OUTPUT: "DIAL_OUTPUT",
+  ALGEDONODE: "ALGEDONODE",
+}
 
 // takes an array [x1,...,xn], returns the nested arrays [[x_1,...,x_p],[x_{p+1},...,x_{2p}],...]
 // where p is partitionSize
 /**
- * 
- * @param {*} array 
- * @param {*} partitionSize 
+ *
+ * @param {*} array
+ * @param {*} partitionSize
  */
 function partitionArray(array, partitionSize) {
   let ret = []
@@ -27,7 +44,7 @@ function partitionArray(array, partitionSize) {
 }
 
 /**
- *  
+ *
  */
 class AlgedonodeHierarchy {
   // takes an AlgedonodeHierarchyRenderer
@@ -47,7 +64,7 @@ class AlgedonodeHierarchy {
     }
 
     for (let j = 0; j < 8; j++) {
-      this.lights[j] = [new Light(LightType.B, j), new Light(LightType.A, j)]
+      this.lights[j] = [new Light(LightTypes.B, j), new Light(LightTypes.A, j)]
 
       let brassPadPair = []
       for (let i = 0; i < 4; i++) {
@@ -249,6 +266,9 @@ class AlgedonodeHierarchy {
     return ret
   }
 
+  /**
+   * @returns {Array.<SimulationResult>}
+   */
   fullSimulate() {
     let results = []
     for (let i1 = 1; i1 <= 10; i1++) {
@@ -476,10 +496,10 @@ class BrassPadPair {
 
     if (contactPosition >= this.offset / 2) {
       this.active[1] = true
-      this.outputs[1].activate(ActivationSource.ALGEDONODE)
+      this.outputs[1].activate(ActivationSources.ALGEDONODE)
     } else {
       this.active[0] = true
-      this.outputs[0].activate(ActivationSource.ALGEDONODE)
+      this.outputs[0].activate(ActivationSources.ALGEDONODE)
     }
   }
 
@@ -502,20 +522,20 @@ class AlgedonodeSetActivator {
     this.startColumn = startColumn
     this.row = row
     this.endColumn = endColumn
-    this.activationSource = ActivationSource.NONE
+    this.activationSource = ActivationSources.NONE
     this.representativePartitionParent = representativePartitionParent
   }
 
   clear() {
     this.active = false
     this.algedonodes.forEach(algedonode => algedonode.clear())
-    this.activationSource = ActivationSource.NONE
+    this.activationSource = ActivationSources.NONE
   }
 
   activate(source) {
     // Need a bit of logic here - a dial output will only activate this
     // group if the parent group of algedonodes is currently activated
-    if ((source === ActivationSource.DIAL_OUTPUT && this.representativePartitionParent.isActive()) || source === ActivationSource.ALGEDONODE) {
+    if ((source === ActivationSources.DIAL_OUTPUT && this.representativePartitionParent.isActive()) || source === ActivationSources.ALGEDONODE) {
       this.active = true
       this.activationSource = source
       this.algedonodes.forEach(algedonode => algedonode.activate())
@@ -583,7 +603,7 @@ class DialOutput {
   activate() {
     this.active = true
     this.contacts.forEach(contact => {
-      contact.activate(this.value < 9 ? ActivationSource.ALGEDONODE : ActivationSource.DIAL_OUTPUT)
+      contact.activate(this.value < 9 ? ActivationSources.ALGEDONODE : ActivationSources.DIAL_OUTPUT)
     })
   }
   clear() {
@@ -616,16 +636,8 @@ class Strip {
   }
 }
 
-const LightType = {
-  A: "A",
-  B: "B",
-}
 
-const ActivationSource = {
-  NONE: "NONE",
-  DIAL_OUTPUT: "DIAL_OUTPUT",
-  ALGEDONODE: "ALGEDONODE",
-}
+
 
 class Light {
   constructor(aOrB, column) {
@@ -633,7 +645,7 @@ class Light {
     this.active = false
     this.column = column
     this.parent = null
-    this.activationSource = ActivationSource.NONE
+    this.activationSource = ActivationSources.NONE
   }
   setParent(parent) {
     this.parent = parent
@@ -642,14 +654,14 @@ class Light {
     return this.column
   }
   activate(source) {
-    if ((source === ActivationSource.DIAL_OUTPUT && this.parent.isActive()) || source === ActivationSource.ALGEDONODE) {
+    if ((source === ActivationSources.DIAL_OUTPUT && this.parent.isActive()) || source === ActivationSources.ALGEDONODE) {
       this.active = true
       this.activationSource = source
     }
   }
   clear() {
     this.active = false
-    this.activationSource = ActivationSource.NONE
+    this.activationSource = ActivationSources.NONE
   }
   render(renderer) {
     renderer.light(this, this.column, this.aOrB, this.active, this.activationSource)
@@ -671,3 +683,14 @@ class Light {
     return this.column
   }
 }
+
+
+// Hacls to get LightType and ActivationSource represented as types for enums
+/**
+ * @class
+ */
+function LightType() {}
+/**
+ * @class
+ */
+function ActivationSource() {}

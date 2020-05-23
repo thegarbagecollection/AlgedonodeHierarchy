@@ -8,8 +8,9 @@ $(function() {
 
   const { algHierarchy, dataStore, barChart, statePlot, colourHandler } = initialiseMainComponents()
   const renderingHandler = new RenderingHandler(algHierarchy, disabledByMetasystem, labelledByViewMode)
-
-  // Function Integer -> (), should set the stored data point count label
+  /**
+   * @type {DataPointLabelSetterCallback}
+   */
   const dataPointLabelSetter = (newStoreSpace) => $("#label-data-store-size").text(`Data point store space: ${newStoreSpace}`)
 
   const dataHandler = new DataHandler(dataStore, barChart, statePlot, dataPointLabelSetter)
@@ -21,10 +22,6 @@ $(function() {
   let contactsHandler = new ContactsHandler(algHierarchy, rerenderAndPlot)
   algHierarchy.setupConnections(contactsHandler)
 
-  // if the slider or contacts have changed since the last full plot, we can't rely on the 
-  // cached full plot data, it'll have to be recalculated
-  let sliderOrContactsChanged = true // force a full render of the full plot first time
-  
   // First display of window - draw axes for data graphics, draw hierarchy, plot result of starting state (1,1,1,1)
   dataHandler.drawAxes()
   rerenderAndPlot()
@@ -40,7 +37,7 @@ $(function() {
       max: 100,
       value: 50,
       slide: function( event, ui ) {
-        sliderOrContactsChanged = true
+        dataHandler.sliderOrContactsChange()
         let newStripPos = convert100RangeToSliderShift(ui.value)
         algHierarchy.moveStrip(i, newStripPos)
         // if a slider changes, we want to make sure a possible different output from the same state is rendered
@@ -78,12 +75,12 @@ $(function() {
   // When we change the contacts, that'll also have to erase the data graphics
   $("#random-contacts").button().click(() => { 
     contactsHandler.setRandomContacts() 
-    sliderOrContactsChanged = true
+    dataHandler.sliderOrContactsChange()
   })
 
   $("#default-contacts").button().click(() => { 
     contactsHandler.restoreDefaultContacts() 
-    sliderOrContactsChanged = true
+    dataHandler.sliderOrContactsChange()
   })
 
   /**************************************************************
@@ -131,10 +128,7 @@ $(function() {
   $("#draw-full-data-graphics").button()
   $("#draw-full-data-graphics").click((event) => {
       playModeHandler.stop()
-      dataHandler.requestCompletePlot(algHierarchy, sliderOrContactsChanged)
-      // when we do a full plot of all state-results, we cache it - unless 
-      // something happens that could put the cache out of date (slider / contact positions)
-      sliderOrContactsChanged = false
+      dataHandler.requestCompletePlot(algHierarchy)
   })
   $("#data-store-size").slider({
     range: "min",
@@ -293,14 +287,14 @@ function initialiseMainComponents() {
 
 
 /**
- * @description When run, sets all DOM elements with class "metasystem-disabled" to be disabled if the metasystem is enabled, and
+ * When run, sets all DOM elements with class "metasystem-disabled" to be disabled if the metasystem is enabled, and
  * enabled if metasystem mode is disabled
  * @callback MetasystemButtonDisabler
  * @param {ViewMode} viewMode
  * @returns {void}
  */
 /**
- * @description When run, labels a DOM element (or set of DOM elements) according to the current view mode (metasystem enabled / disabled)
+ * When run, labels a DOM element (or set of DOM elements) according to the current view mode (metasystem enabled / disabled)
  * @callback ViewModeElementLabeller
  * @param {ViewMode} viewMode
  * @returns {void}
@@ -340,6 +334,8 @@ function rnd(n) {
 
 
 /**
+ * Sets dial numbered dialNum to the given value, both in the interface and within the algedonode hierarchy, 
+ * possibly causing changes to the algedonode hierarchy's output state
  * @callback DialSetterCallback
  * @param {Number} dialNum the dial number to set
  * @param {Number} value the value (from 1-10 inclusive) to set the dial to
@@ -357,6 +353,8 @@ function setDial(algHierarchy) {
     algHierarchy.setDialValue(dialNum, value)
   }
 }
+
+
 
 
 /**
@@ -379,6 +377,7 @@ function rerenderHierarchyAndPlotNewPoint(algHierarchy, dataHandler, renderingHa
     dataHandler.displayNewPoint(algHierarchy) 
   }
 }
+
 
 
 

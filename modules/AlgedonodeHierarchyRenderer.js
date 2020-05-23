@@ -25,8 +25,8 @@ class AlgedonodeHierarchyRenderer {
       this.label(`${i + 1}`, cX, cY, fontSize)
     }
     let { cX, cY } = this.elementCentre(4.25, -1, this.positionInfo)
-    this.label(LightType.A, cX, cY - 0.4 * this.positionInfo.rowHeight, fontSize)
-    this.label(LightType.B, cX, cY + 0.5 * this.positionInfo.rowHeight, fontSize)
+    this.label(LightTypes.A, cX, cY - 0.4 * this.positionInfo.rowHeight, fontSize)
+    this.label(LightTypes.B, cX, cY + 0.5 * this.positionInfo.rowHeight, fontSize)
   }
 
 
@@ -83,8 +83,8 @@ class AlgedonodeHierarchyRenderer {
 
     this.lightConnection(theLight, column, rowOffset, aOrB, active, activationSource)
 
-    let onColour = aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
-    let offColour = aOrB === LightType.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
+    let onColour = aOrB === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+    let offColour = aOrB === LightTypes.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
 
     let colour = active ? onColour : offColour
 
@@ -113,8 +113,8 @@ class AlgedonodeHierarchyRenderer {
     let radius = this.positionInfo.rowHeight / 4
     let y = cY + this.positionInfo.rowHeight * rowOffset
 
-    let onColour = aOrB === LightType.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
-    let offColour = aOrB === LightType.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
+    let onColour = aOrB === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+    let offColour = aOrB === LightTypes.A ? this.colourHandler.lightAOff : this.colourHandler.lightBOff
 
     let colour = active ? onColour : offColour
 
@@ -275,14 +275,14 @@ class AlgedonodeHierarchyRenderer {
   }
 
   lightTypeToOffset(lightType) {
-      return lightType === LightType.A ? -0.5 : 0.5
+      return lightType === LightTypes.A ? -0.5 : 0.5
   }
 
   lightConnectionCoords(column, rowOffset, aOrB) {
     let {cX, cY} =this.elementCentre(4.25, column, this.positionInfo)
     let y = cY + this.positionInfo.rowHeight * rowOffset
     return {
-      x: cX - (aOrB === LightType.B ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
+      x: cX - (aOrB === LightTypes.B ? 0.8 : 0.4) * this.positionInfo.columnWidth - this.positionInfo.columnWidth, 
       y: y
     }
   }
