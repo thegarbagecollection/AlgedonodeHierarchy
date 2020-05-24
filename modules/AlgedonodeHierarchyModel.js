@@ -1,8 +1,10 @@
 /**
+ * A representation of the current dial states of the algedonode hierarchy.
+ * Each value should be an integer from 1 to 10 inclusive.
  * @typedef { [number, number, number, number] } DialStates
  */
 /**
- * @typedef { { state: DialStates, result: { lightNum: Number, aOrB: LightTypes } } } SimulationResult
+ * @typedef { { state: DialStates, result: { lightColumn: Number, aOrB: LightTypes } } } StateResultPair
  */
 
 /**
@@ -233,10 +235,6 @@ class AlgedonodeHierarchy {
     this.dials[dial].setDialValue(value)
   }
 
-  getDialStates() {
-    return this.dials.map(dial => dial.getDialValue())
-  }
-
   propagateDialValues() {
     this.dials.forEach(dial => {
       dial.propagateValue()
@@ -259,12 +257,12 @@ class AlgedonodeHierarchy {
     for (let i = 0; i < 8; i++) {
       if (this.lights[i][0].isActive()) {
         ret = {
-          lightNum: i,
+          lightColumn: i,
           aOrB: this.lights[i][0].getAorB(),
         }
       } else if (this.lights[i][1].isActive()) {
         ret = {
-          lightNum: i,
+          lightColumn: i,
           aOrB: this.lights[i][1].getAorB(),
         }
       }
@@ -282,7 +280,7 @@ class AlgedonodeHierarchy {
   }
 
   /**
-   * @returns {Array.<SimulationResult>}
+   * @returns {Array.<StateResultPair>}
    */
   fullSimulate() {
     let results = []
@@ -296,9 +294,16 @@ class AlgedonodeHierarchy {
       }
     }
 
-    // results: in format {state: [i1,i2,i3,i4], result: { lightNum, aOrB }}
 
     return results
+  }
+
+  getCurrentResult() {
+    return { state: this.getDialStates(), result: this.getIlluminatedLight() }
+  }
+
+  getDialStates() {
+    return this.dials.map(dial => dial.getDialValue())
   }
 
   getIlluminatedLight() {
@@ -307,8 +312,8 @@ class AlgedonodeHierarchy {
         let light = this.lights[i][j]
         if (light.isActive()) {
           return {
-            column: light.getColumn(),
-            lightRow: light.getAorB(),
+            lightColumn: light.getColumn(),
+            aOrB: light.getAorB(),
           }
         }
       }

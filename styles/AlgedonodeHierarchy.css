@@ -4,10 +4,10 @@
     height:150px;
 }
 
-#canvas-div {
+#hierarchy-sliders-contacts {
     float:left;
 }
-#dial-div {
+#dials-and-playback {
     float:left;
     margin-left: 30px;
     margin-right: 30px;
@@ -17,43 +17,35 @@
     margin-left: 50px;
 }
 
-#topstuff {
+#main {
     float: none;
 }
 
-#canvas {
+#algedonode-hierarchy {
     border: 1px solid black;
 }
 
-#plot {
-    border: 1px solid black;
-}
-
-#states {
-    border: 1px solid black;
-}
-
-#datapoints {
+#bar-chart {
     width: 400px;
+    height: 200px;
+}
+#state-plot {
+    width: 400px;
+    height: 400px;
+}
+
+#label-speed  {
+    font-family: sans-serif;
+}
+#label-data-store-size {
+    font-family: sans-serif;
+}
+
+#data-graphics-and-controls {
     float: left;
 }
 
-#labelSpeed  {
-    font-family: sans-serif;
-}
-#labelDataPoints {
-    font-family: sans-serif;
-}
-
-#options {
-    float: inline-start;
-}
-
-#plot-div {
-    float: left;
-}
-
-#systemSettings {
+#system-settings {
     float:left;
     margin-right: 10px;
 }

@@ -262,7 +262,7 @@ $(function() {
 function initialiseMainComponents() {
   let dataStore = new SmallDataStore(InitialValues.DATA_STORE_SIZE)
 
-  let algCanvas = document.getElementById("canvas")
+  let algCanvas = document.getElementById("algedonode-hierarchy")
   let algCtx = algCanvas.getContext("2d")
 
   let barChartCanvas = document.getElementById("bar-chart")

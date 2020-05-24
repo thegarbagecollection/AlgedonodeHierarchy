@@ -115,25 +115,25 @@ class DataHandler {
    * Given a sequence of mappings from dial states to the resulting algedonode hierarchy output, count the
    * number of states mapping to each light in each column.
    * 
-   * @param { Array.<SimulationResult> } individualResults a set of individual results to compute the counts for
+   * @param { Array.<StateResultPair> } individualResults a set of individual results to compute the counts for
    * 
    * @returns { CountResults } array containing respective counts for number of 
    * lights on of each colour (A or B) in each column of the hierarchy over the given states
    * @protected
    */
   computeCountsFromResults(individualResults) {
-    return individualResults.reduce((acc, { result: { lightNum, aOrB } }) => {
-      if (!acc[lightNum]) {
-        acc[lightNum] = { aCount: 0, bCount: 0 }
+    return individualResults.reduce((acc, { result: { lightColumn, aOrB } }) => {
+      if (!acc[lightColumn]) {
+        acc[lightColumn] = { aCount: 0, bCount: 0 }
       }
-      let { aCount, bCount } = acc[lightNum]
-      acc[lightNum] = { aCount: aOrB === LightTypes.A ? aCount + 1 : aCount, bCount: aOrB === LightTypes.B ? bCount + 1 : bCount }
+      let { aCount, bCount } = acc[lightColumn]
+      acc[lightColumn] = { aCount: aOrB === LightTypes.A ? aCount + 1 : aCount, bCount: aOrB === LightTypes.B ? bCount + 1 : bCount }
       return acc
     }, [])
   }
 
   /**
-   * @returns { { storedIndividualResults: Array.<SimulationResult>, counts: CountResults }} an object containing both the 
+   * @returns { { storedIndividualResults: Array.<StateResultPair>, counts: CountResults }} an object containing both the 
    * individual results currently stored in the data store, and the counts coming from them
    * @protected
    */
@@ -226,7 +226,7 @@ class FullPlotHandler {
   /**
    * Saves the given individual results and counts for re-rendering next time full plot is selected,
    * assuming no changes are made to sliders or contacts
-   * @param {Array.<SimulationResult>} individualResults individual results to save
+   * @param {Array.<StateResultPair>} individualResults individual results to save
    * @param {CountResults} counts counts to save
    * @protected
    */
@@ -308,7 +308,7 @@ class PartialPlotHandler {
   /**
    * Saves the given individual results and counts for re-rendering next time full plot is selected,
    * assuming no changes are made to sliders or contacts
-   * @param {Array.<SimulationResult>} individualResults individual results to save
+   * @param {Array.<StateResultPair>} individualResults individual results to save
    * @param {CountResults} counts counts to save
    * @protected
    */
@@ -354,15 +354,13 @@ class PartialPlotHandler {
    * @todo could maybe have a callback to get the data from the alg hierarchy, rather than access directly
    */
   plotNewPoint(algHierarchy, dataStore) {
-    let states = algHierarchy.getDialStates()
-    let illum = algHierarchy.getIlluminatedLight()
-    if (illum !== null) {
-      let { column, lightRow } = illum
-      let removed = dataStore.enqueue(states, column, lightRow)
+    let stateResult = algHierarchy.getCurrentResult()
+    if (stateResult.result !== null) {
+      let removed = dataStore.enqueue(stateResult)
 
-      this.statePlot.plotStatePoint({ states, column, lightRow }, removed)
+      this.statePlot.plotStatePoint(stateResult, removed)
 
-      this.barChart.changePoint({ states, column, lightRow }, removed)
+      this.barChart.changePoint(stateResult, removed)
     }
   }
 }

@@ -16,8 +16,8 @@ class LimitedBarChart {
     this.maxDrawH = 0.8 * this.h
   }
 
-  statesToInteger(states) {
-    return 1000 * (states[0] - 1) + 100 * (states[1] - 1) + 10 * (states[2] - 1) + (states[3] - 1)
+  stateToInteger(state) {
+    return 1000 * (state[0] - 1) + 100 * (state[1] - 1) + 10 * (state[2] - 1) + (state[3] - 1)
   }
 
   clearAll() {
@@ -41,36 +41,36 @@ class LimitedBarChart {
 
   changePoint(newPoint, removedPoint) {
     if (removedPoint) {
-      let { states, column, lightRow } = removedPoint
-      let s = this.statesToInteger(states)
+      let { state, result: { lightColumn, aOrB }} = removedPoint
+      let s = this.stateToInteger(state)
       let stored = this.stateMapping[s]
       if (stored) {
-        if (column !== stored.column || lightRow !== stored.lightRow) console.log("Tried to remove a point that was different from expected")
+        if (lightColumn !== stored.lightColumn || aOrB !== stored.aOrB) console.log("Tried to remove a point that was different from expected")
         this.stateMapping[s] = null
-        this.totalFrequencyData[lightRow]--
+        this.totalFrequencyData[aOrB]--
         this.totalFrequencyDataCount--
-        this.barData[column][lightRow]--
+        this.barData[lightColumn][aOrB]--
       }
     }
 
     if (newPoint) {
-      let { states, column, lightRow } = newPoint
-      let s = this.statesToInteger(states)
+      let { state, result: { lightColumn, aOrB }} = newPoint
+      let s = this.stateToInteger(state)
       let stored = this.stateMapping[s]
-      if (stored === null || stored.column !== column || stored.lightRow !== lightRow) {
-        this.addToStored(s, column, lightRow)
+      if (stored === null || stored.lightColumn !== lightColumn || stored.aOrB !== aOrB) {
+        this.addToStored(s, lightColumn, aOrB)
         if (stored === null) {
           this.totalFrequencyDataCount++
-          this.totalFrequencyData[lightRow]++
-          this.barData[column][lightRow]++
+          this.totalFrequencyData[aOrB]++
+          this.barData[lightColumn][aOrB]++
         } else {
-          if (stored.lightRow !== lightRow) {
-            this.totalFrequencyData[stored.lightRow]--
-            this.totalFrequencyData[lightRow]++
+          if (stored.aOrB !== aOrB) {
+            this.totalFrequencyData[stored.aOrB]--
+            this.totalFrequencyData[aOrB]++
           }
           // should work for all 3 cases
-          this.barData[stored.column][stored.lightRow]--
-          this.barData[column][lightRow]++
+          this.barData[stored.lightColumn][stored.aOrB]--
+          this.barData[lightColumn][aOrB]++
         }
       }
     }
@@ -81,8 +81,8 @@ class LimitedBarChart {
     this.redrawBarsAndFrequencies()
   }
 
-  addToStored(statesInt, column, lightRow) {
-    this.stateMapping[statesInt] = { column, lightRow }
+  addToStored(statesInt, lightColumn, aOrB) {
+    this.stateMapping[statesInt] = { lightColumn, aOrB }
   }
 
   drawBar(column, height, fill, xOffset) {
@@ -143,7 +143,7 @@ class LimitedBarChart {
   }
 
   drawAxes() {
-    this.drawLabels([{ label: LightType.A, column: 9 }, { label: LightType.B, column: 10}])
+    this.drawLabels([{ label: LightTypes.A, column: 9 }, { label: LightTypes.B, column: 10}])
 
     let colLabels = new Array(8).fill(null).map((_, i) => ({ label: `${i + 1}`, column: i }))
     this.drawLabels(colLabels)
@@ -192,8 +192,8 @@ class LimitedBarChart {
     counts.forEach( ({aCount, bCount}, i) => { 
       this.barData[i] = { A: aCount, B: bCount } 
     })
-    individualResults.forEach(({ state, result: { lightNum, aOrB }}) => {
-      this.addToStored(this.statesToInteger(state), lightNum, aOrB)
+    individualResults.forEach(({ state, result: { lightColumn, aOrB }}) => {
+      this.addToStored(this.stateToInteger(state), lightColumn, aOrB)
     })
   }
 }

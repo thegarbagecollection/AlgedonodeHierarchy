@@ -13,15 +13,15 @@ class LimitedStatePlot {
 
   plotStatePoint(newPoint, removedPoint) {
     if (removedPoint) {
-      let { states: statesRemoved, column: columnRemoved, lightRow: lightRowRemoved } = removedPoint
-      let { x, y } = this.getXY(statesRemoved)
+      let { state, result: { lightColumn, aOrB } }= removedPoint
+      let { x, y } = this.getXY(state)
       this.erasePoint(x, y) // hack: it's not clearing the rectangles fully, no idea why, so we need to erase around them
     }
 
     if (newPoint) {
-      let { states: statesNew, column: columnNew, lightRow: lightRowNew } = newPoint
-      let { x, y } = this.getXY(statesNew)
-      let colour = lightRowNew === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
+      let { state, result: { lightColumn, aOrB } } = newPoint
+      let { x, y } = this.getXY(state)
+      let colour = aOrB === LightTypes.A ? this.colourHandler.lightAOn : this.colourHandler.lightBOn
       this.drawPoint(x, y, colour)
     }
 

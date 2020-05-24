@@ -23,11 +23,12 @@
         
     </head>
     <body>
-        <div id="topstuff">
-            <div id="canvas-div">
-                <canvas id="canvas" width="600px" height="600px"></canvas>
+        <!-- Always-visible interface elements -->
+        <div id="main">
+            <div id="hierarchy-sliders-contacts">
+                <canvas id="algedonode-hierarchy" width="600px" height="600px"></canvas>
                 <p></p>
-                <div id="systemSettings">
+                <div id="system-settings">
                     <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="random-contacts">Random contacts</button></p>
                     <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="default-contacts">Default contacts</button></p>
                     <p><button class="ui-button ui-widget ui-corner-all" id="metasystem-toggle"></button></p>
@@ -43,35 +44,35 @@
                     <div class="vslide" id="vslide7"><div class="ui-slider-handle">8</div></div>
                 </div>
             </div>
-            <div id="dial-div">
-                <div id="dials">
-                    <p><input type=text class="dial" id="dial0" value="0"></input></p>
-                    <p><input type=text class="dial" id="dial1" value="0"></input></p>
-                    <p><input type=text class="dial" id="dial2" value="0"></input></p>
-                    <p><input type=text class="dial" id="dial3" value="0"></input></p>
-                    <p><button class="ui-button ui-widget ui-corner-all" id="random-state">Random (step)</button></p>
-                    <p><button class="ui-button ui-widget ui-corner-all" id="play-sequence">Sequence<span class="ui-icon ui-icon-play"></span></button></p>
-                    <p><button class="ui-button ui-widget ui-corner-all" id="play-random">Random<span class="ui-icon ui-icon-play"></span></button></p>
-                    <p><button class="ui-button ui-widget ui-corner-all" id="stop">Stop<span class="ui-icon ui-icon-stop"></span></button></p>
-                    <p><label for="speed" id="labelSpeed">Simulation speed</label><div class="hslide" id="speed"></div></p>
-                </div>
+            <div id="dials-and-playback">
+                <p><input type=text class="dial" id="dial0" value="0"></input></p>
+                <p><input type=text class="dial" id="dial1" value="0"></input></p>
+                <p><input type=text class="dial" id="dial2" value="0"></input></p>
+                <p><input type=text class="dial" id="dial3" value="0"></input></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="random-state">Random (step)</button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="play-sequence">Sequence<span class="ui-icon ui-icon-play"></span></button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="play-random">Random<span class="ui-icon ui-icon-play"></span></button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="stop">Stop<span class="ui-icon ui-icon-stop"></span></button></p>
+                <p><label for="speed" id="label-speed">Simulation speed</label><div class="hslide" id="speed"></div></p>
             </div>
-            <div id="plot-div">
+            <div id="data-graphics-and-controls">
                 <p><canvas id="bar-chart" width="400" height="200"></canvas></p>
                 <p><canvas id="state-plot" width="400" height="400"></canvas></p>
                 <p><label for="data-store-size" id="label-data-store-size">Data point store space</label><div class="hslide" id="data-store-size"></div></p>
                 <br />
-                <div id="plotButtons"><p>
-                    <button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="draw-full-data-graphics">Full plot</button>
+                <div id="data-graphics-controls"><p>
+                    <button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="draw-full-data-graphics">Full simulation</button>
                     <button class="ui-button ui-widget ui-corner-all" id="reset-data-graphics-and-data">Reset data graphics & data store</button></p>
                 </div>
-                <div id="options">
+                <div id="colour-settings">
                     <button class="ui-button ui-widget ui-corner-all" id="change-colours">Colour settings<span class="ui-icon ui-icon-gear"></span></button>
                     <button class="ui-button ui-widget ui-corner-all" id="default-colours">Restore default colours<span class="ui-icon ui-icon-arrowreturnthick-1-w"></span></button>
                 </div>
             </div>
             
         </div>
+
+        <!-- Modal dialog boxes -->
         <div id="dialog-colour-picker-form" title="Select colours">
             <form>
                 <fieldset id="colour-picker-field">
