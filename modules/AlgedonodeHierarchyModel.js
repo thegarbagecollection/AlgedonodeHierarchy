@@ -42,8 +42,13 @@ const ActivationSources = {
   ALGEDONODE: "ALGEDONODE",
 }
 
-// takes an array [x1,...,xn], returns the nested arrays [[x_1,...,x_p],[x_{p+1},...,x_{2p}],...]
-// where p is partitionSize
+/**
+ * Partitions an array into a number of sub-arrays, each partitionSize in length.
+ * @param {Array} array array to partition
+ * @param {Number} partitionSize size of each partition
+ * @returns {Array.<Array>} an array of arrays, each partitionSize in length and altogether containing,
+ * in order, all the elements of the input array.
+ */
 function partitionArray(array, partitionSize) {
   let ret = []
   let partition = []
@@ -61,17 +66,25 @@ function partitionArray(array, partitionSize) {
 }
 
 /**
- *
+ * The root of the algedonode hierarchy structure; controls access to the algedonode
+ * hierarchy's state and light information.
+ * 
+ * Simulates the effect of a dial state on the algedonode hierarchy, giving a light 
+ * (in row A or B) as output.
+ * 
+ * 4 rows, 8 columns.
  */
 class AlgedonodeHierarchy {
-  // takes an AlgedonodeHierarchyRenderer
+  /**
+   * @param {AlgedonodeHierarchyRenderer} renderer renders the algedonode hierarchy to a canvas
+   */
   constructor(renderer) {
     this.renderer = renderer
     this.dials = []
     this.rows = []
     this.lights = []
     this.strips = []
-    this.algedonodeActivators = []
+    this.algedonodeActivators = [] // receives output from brass pads or dial, and uses it to its connected lower algedonode
     for (let i = 0; i < 4; i++) {
       this.dials[i] = new Dial(i)
       this.rows[i] = []
@@ -88,35 +101,34 @@ class AlgedonodeHierarchy {
         brassPadPair[i] = this.rows[i][j].brassPadPair
       }
 
+      // Final row needs lights on its brass pad outputs, rather than algedonode activators.
       brassPadPair[3].setAttachedLightPair(this.lights[j])
 
       this.strips[j] = new Strip(brassPadPair, j)
     }
   }
 
+  /**
+   * Sets up initial connections between all dials, algedonodes, and lights
+   * @param {ContactHandler} contactHandler 
+   * @protected
+   */
   setupConnections(contactHandler) {
-    this.setFirstRowInputConnections(contactHandler)
-    this.setOtherRowInputConnections(contactHandler)
-    this.setOtherRowOutputConnections()
+    this.setRowInputConnections(contactHandler)
     this.setLastRowOutputConnections()
+    this.setOtherRowOutputConnections()
   }
 
-  setFirstRowInputConnections(contactHandler) {
-    let d = this.dials[0]
-    let r0 = this.rows[0]
-    for (let c = 0; c < 8; c++) {
-      r0[c].setSingleContact(d.getDialOutputsForAlgedonodes()[c], contactHandler.getContactsDefault())
-    }
-  }
-  setOtherRowInputConnections(contactHandler) {
-    for (let r = 1; r < 4; r++) {
+
+  setRowInputConnections(contactHandler) {
+    for (let r = 0; r < 4; r++) {
       let inputs = this.dials[r].getDialOutputsForAlgedonodes()
       let inPartitionSize = Math.pow(2, r)
       let partitionedInputs = partitionArray(inputs, inPartitionSize)
 
       let currInputPartition = 0
       for (let c = 0; c < 8; c++) {
-        this.rows[r][c].setMultiContact(partitionedInputs[currInputPartition], contactHandler.getContactsDefault())
+        this.rows[r][c].setContact(partitionedInputs[currInputPartition], contactHandler.getContactsDefault())
         currInputPartition++
         if (currInputPartition === partitionedInputs.length) currInputPartition = 0
       }
@@ -363,23 +375,9 @@ class Algedonode {
     return this.row
   }
 
-  // position is either 0.5 for on, or -0.5 for off
-  setSingleContact(input, contactsDefault) {
-    let c = new Contact(contactsDefault[1][this.column], this.brassPadPair)
-    this.contacts.push(c)
-    input.link(c)
-    c.parentActivated()
-    this.contactCount = 1
-  }
-
-  // Note: ONLY CALLED FROM ROWS 1-3
-  setMultiContact(inputs, contactsDefault) {
-    // Multi-contacts are spread out evenly across the double strip, centred on position 0
+  setContact(inputs, contactsDefault) {
     // Let's have them contained in a box of width 1 but never touching the edges, so
     // a full push of the pad in either direction will still contain all the strips
-    // 2 contacts: 0.49, -0.49                separation of 1
-    // 4 contacts: 0.49, 0.16, -0.16, -0.49   separation of 1/3
-    // 8 contacts: 0.49, 0.35, 0.21, 0.07, -0.07, -0.21,-0.35 , -0.49    separation of 1/7
     if (!contactsDefault[inputs.length]) throw `setMultiContact got unexpected input size of ${inputs.length}`
 
     this.contactCount = inputs.length
@@ -391,6 +389,9 @@ class Algedonode {
       this.contacts[i] = c
       inputs[i].link(c)
     }
+
+    // Handle first row of contacts - their parent algedonode is always activated!
+    if (this.contactCount === 1) this.contacts[0].parentActivated()
   }
 
   setOutput(outputs) {
@@ -446,10 +447,6 @@ class Algedonode {
     this.contacts.forEach((contact, i) => {
       contact.setPosition(contactsCurrent[this.contactCount][this.column][i])
     })
-    // } else {
-    //   // there's only the one contact, which we set directly from the corresponding value
-    //   this.contacts[0].setPosition(contactsCurrent[this.contactCount][this.column])
-    // }
   }
 }
 
