@@ -95,7 +95,7 @@ class LimitedBarChart {
 
   /**
    * Updates frequencies for the bars given by the new and removed state result pairs, updates the
-   * overall frequencies, and re-renders the graph.
+   * overall frequencies, and re-renders the chart.
    * @param {StateResultPair} newStateResultPair state result pair to add to the bar chart; null if none
    * @param {StateResultPair} removedStateResultPair state result pair to remove from the bar chart; null if none
    * @public
