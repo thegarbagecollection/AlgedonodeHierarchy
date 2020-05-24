@@ -93,7 +93,7 @@ class AlgedonodeHierarchyRenderer {
 
   lightConnection(theLight, column, rowOffset, aOrB, active, activationSource) {
     let lineWidth = 1.5
-    let strokeStyle = activationSource === ActivationSource.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
+    let strokeStyle = activationSource === ActivationSources.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
 
     var {x, y} = this.lightConnectionCoords(column, rowOffset, aOrB)
     this.line({lineWidth, strokeStyle}, 
@@ -222,7 +222,7 @@ class AlgedonodeHierarchyRenderer {
     let connPoint = { x: cX - 2 * this.positionInfo.columnWidth, y: cY + 1.6 * this.positionInfo.rowHeight }
 
     let lineWidth = 1
-    let strokeStyleDialOutput = activationSource === ActivationSource.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
+    let strokeStyleDialOutput = activationSource === ActivationSources.DIAL_OUTPUT ? this.colourHandler.activated : this.colourHandler.dialOutput
     this.line({ lineWidth, strokeStyle: strokeStyleDialOutput }, connPoint, {x : connPoint.x, y: connPoint.y - this.positionInfo.rowHeight / 3.5})
 
     let styleAlgedonodeSet = active ? this.colourHandler.activated : "black"

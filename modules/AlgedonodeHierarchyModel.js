@@ -5,28 +5,43 @@
  * @typedef { { state: DialStates, result: { lightNum: Number, aOrB: LightTypes } } } SimulationResult
  */
 
-
 /**
- * 
+ * Defines the light type - which row is the light on, row A or row B?
+ * @enum { LightType }
  */
 const LightTypes = {
+  /**
+   * @type { LightType }
+   */
   A: "A",
+  /**
+   * @type { LightType }
+   */
   B: "B",
 }
 
+/**
+ * Where is a given algedonode or light being activated from - directly from a dial output, or
+ * via another algedonode's output?
+ * @enum { ActivationSource }
+ */
 const ActivationSources = {
+  /**
+   * @type { ActivationSource }
+   */
   NONE: "NONE",
+  /**
+   * @type { ActivationSource }
+   */
   DIAL_OUTPUT: "DIAL_OUTPUT",
+  /**
+   * @type { ActivationSource }
+   */
   ALGEDONODE: "ALGEDONODE",
 }
 
 // takes an array [x1,...,xn], returns the nested arrays [[x_1,...,x_p],[x_{p+1},...,x_{2p}],...]
 // where p is partitionSize
-/**
- *
- * @param {*} array
- * @param {*} partitionSize
- */
 function partitionArray(array, partitionSize) {
   let ret = []
   let partition = []

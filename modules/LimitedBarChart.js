@@ -123,8 +123,8 @@ class LimitedBarChart {
       this.drawBars(i, aCount, bCount, this.totalFrequencyDataCount)
     })
     
-    let totalLightA = this.totalFrequencyData[LightType.A]
-    let totalLightB = this.totalFrequencyData[LightType.B]
+    let totalLightA = this.totalFrequencyData[LightTypes.A]
+    let totalLightB = this.totalFrequencyData[LightTypes.B]
 
     this.drawFrequencies(totalLightA, totalLightB)
   }
@@ -143,7 +143,7 @@ class LimitedBarChart {
   }
 
   drawAxes() {
-    this.drawLabels([{ label: "A", column: 9 }, { label: "B", column: 10}])
+    this.drawLabels([{ label: LightType.A, column: 9 }, { label: LightType.B, column: 10}])
 
     let colLabels = new Array(8).fill(null).map((_, i) => ({ label: `${i + 1}`, column: i }))
     this.drawLabels(colLabels)

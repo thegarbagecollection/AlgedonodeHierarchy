@@ -128,7 +128,7 @@ $(function() {
   $("#draw-full-data-graphics").button()
   $("#draw-full-data-graphics").click((event) => {
       playModeHandler.stop()
-      dataHandler.requestCompletePlot(algHierarchy)
+      dataHandler.requestCompleteScanAndRender(algHierarchy)
   })
   $("#data-store-size").slider({
     range: "min",
@@ -143,7 +143,7 @@ $(function() {
 
   $("#label-data-store-size").text(`Data point store space: ${InitialValues.DATA_STORE_SIZE}`)
 
-  $("#reset-data-graphics-and-data").click(() => dataHandler.clearPlotGraphicAndData())
+  $("#reset-data-graphics-and-data").click(() => dataHandler.clearDataGraphicAndData())
 
   
   /**************************************************************
