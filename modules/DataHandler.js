@@ -184,7 +184,7 @@ class DataHandler {
     if (removed && this.currentGraphicHandler === this.partialPlotHandler) {
       removed.forEach(pointRemoved => {
         this.statePlot.plotStatePoint(null, pointRemoved)
-        this.barChart.changePoint(null, pointRemoved)
+        this.barChart.changeBars(null, pointRemoved)
       })
     }
   }
@@ -360,7 +360,7 @@ class PartialPlotHandler {
 
       this.statePlot.plotStatePoint(stateResult, removed)
 
-      this.barChart.changePoint(stateResult, removed)
+      this.barChart.changeBars(stateResult, removed)
     }
   }
 }
