@@ -10,6 +10,10 @@ class AlgedonodeHierarchyRenderer {
     }
   }
 
+  /**
+   * Clear the graphic to the background colour.
+   * @public
+   */
   clear() {
     let canvas = this.ctx.canvas
     let w = canvas.width

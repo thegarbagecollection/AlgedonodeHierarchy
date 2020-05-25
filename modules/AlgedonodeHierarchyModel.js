@@ -43,7 +43,7 @@ const ActivationSources = {
 }
 
 /**
- * Partitions an array into a number of sub-arrays, each partitionSize in length.
+ * Partitions an array into sub-arrays, each partitionSize in length.
  * @param {Array} array array to partition
  * @param {Number} partitionSize size of each partition
  * @returns {Array.<Array>} an array of arrays, each partitionSize in length and altogether containing,
@@ -69,8 +69,11 @@ function partitionArray(array, partitionSize) {
  * The root of the algedonode hierarchy structure; controls access to the algedonode
  * hierarchy's state and light information.
  * 
- * Simulates the effect of a dial state on the algedonode hierarchy, giving a light 
- * (in row A or B) as output.
+ * Changes to the dial state propagate down through the hierarchy to produce a light
+ * as output, highlighting which components are active on the way.
+ * 
+ * Additionally, can simulate (without rendering) the effect of a dial state on the
+ * algedonode hierarchy, giving the light resulting as output.
  * 
  * 4 rows, 8 columns.
  */
@@ -84,7 +87,7 @@ class AlgedonodeHierarchy {
     this.rows = []
     this.lights = []
     this.strips = []
-    this.algedonodeActivators = [] // receives output from brass pads or dial, and uses it to its connected lower algedonode
+    this.algedonodeActivators = [] // receives output from brass pads or dial, and passes it to its connected lower algedonode
     for (let i = 0; i < 4; i++) {
       this.dials[i] = new Dial(i)
       this.rows[i] = []
@@ -110,17 +113,25 @@ class AlgedonodeHierarchy {
 
   /**
    * Sets up initial connections between all dials, algedonodes, and lights
-   * @param {ContactHandler} contactHandler 
+   * @param {ContactsHandler} contactHandler contacts handler to use in setting contact positions
    * @protected
    */
   setupConnections(contactHandler) {
-    this.setRowInputConnections(contactHandler)
-    this.setLastRowOutputConnections()
-    this.setOtherRowOutputConnections()
+    this.setRowInputConnections(contactHandler) // dial output links to algedonode contacts
+    this.setRowOutputConnections() // algedonode -> algedonode links, direct links from dial positions 9 and 10
   }
 
-
+  /**
+   * Set up the links between dial outputs and algedonode contacts.
+   * @param {ContactsHandler} contactHandler contacts handler to use in setting contact positions
+   * @protected
+   */
   setRowInputConnections(contactHandler) {
+    // Over each row, we partition dial outputs 1-8 into 8 groups by cycling the outputs. One group per algedonode in that row,
+    // whose size matches the number of contacts in that algedonode. e.g. in the second row, where algedonodes have 2 contacts, dial
+    // outputs are (conceptually) grouped  [[1,2],[3,4],[5,6],[7,8],[1,2],[3,4],[5,6],[7,8]].
+    // Note that dial outputs 9 and 10 will be linked directly to the output of the algedonodes, so isn't handled here.
+    // Then we link the contacts for each algedonode against the dial outputs for the corresponding group in that row.
     for (let r = 0; r < 4; r++) {
       let inputs = this.dials[r].getDialOutputsForAlgedonodes()
       let inPartitionSize = Math.pow(2, r)
@@ -129,72 +140,95 @@ class AlgedonodeHierarchy {
       let currInputPartition = 0
       for (let c = 0; c < 8; c++) {
         this.rows[r][c].setContact(partitionedInputs[currInputPartition], contactHandler.getContactsDefault())
-        currInputPartition++
+
+        // cycle current partition
+        currInputPartition++ 
         if (currInputPartition === partitionedInputs.length) currInputPartition = 0
       }
     }
   }
 
-  setLastRowOutputConnections() {
-    let r3 = this.rows[3]
-    for (let c = 0; c < 8; c++) {
-      r3[c].setOutput([this.lights[c][0], this.lights[c][1]])
-    }
-  }
-
-  setOtherRowOutputConnections() {
+  /**
+   * Links the brass pad outputs of row r in 1 to 3 to activate the appropriate algedonodes in row r+1; 
+   * also links dial outputs 9 and 10 of row r to activate the appropriate algedonodes in row r+1.
+   * @protected
+   */
+  setRowOutputConnections() {
     /*   create 2 subpartitions of equal size
              all the 0 output pads of this partition activate the first subpartition
              all the 1 output pads of this partition activate the second subpartition
         */
     this.linkPartitions(0, 0, 7)
 
-    // also need to link the lights in with dial 8 and 9 for dial3
-
+    // also need to link the lights in with dial outputs 9 and 10
     for (let c = 0; c < 8; c++) {
       this.dials[3].link9and10(this.lights[c][0], this.lights[c][1])
     }
   }
 
+  /**
+   * Recursive helper for {@link setOtherRowOutputConnections}. 
+   * 
+   * Given a row r (indexed 0 - 2), and a partition p of r's algedonodes given by a starting column 
+   * and an ending column (inclusive), create two equal subpartitions p0, p1 of that partition, and for
+   * all of the algedonodes in p, link their 0 output to activate subpartition p0, and their 1 output to activate
+   * subpartition p1.
+   * 
+   * A row index of 3 indicates that the current partition should be of size 1 (a single algedonode),
+   * and this algedonode should be linked to its corresponding lights.
+   * @param {Number} row current row in 0 to 3
+   * @param {Number} pStart start of the row partition
+   * @param {Number} pEnd end of the row partition (inclusive)
+   */
   linkPartitions(row, pStart, pEnd) {
+    // termination condition; should be at pStart = pEnd, a single algedonode partition
     if (row === 3) {
+      this.rows[row][pStart].setOutput([this.lights[pStart][0], this.lights[pStart][1]])
       this.lights[pStart].forEach(light => light.setParent(this.rows[row][pStart]))
       return
     }
 
     let pMid = Math.trunc((pStart + pEnd) / 2) + 1
 
-    let partition0 = []
-    for (let c = pStart; c <= pMid - 1; c++) {
-      partition0.push(this.rows[row + 1][c])
-    }
+    // equal splits of this partition
+    let partition0 = this.rows[row + 1].slice(pStart, pMid)
+    let partition1 = this.rows[row + 1].slice(pMid, pEnd + 1)
 
-    let partition1 = []
-    for (let c = pMid; c <= pEnd; c++) {
-      partition1.push(this.rows[row + 1][c])
-    }
-
+    // Create single points of activation to activate each subpartition, corresponding
+    // to 0 and 1 outputs from the algedonodes of this partition
     let algAct0 = new AlgedonodeSetActivator(partition0, pStart, pMid - 1, row, this.rows[row][pStart])
     let algAct1 = new AlgedonodeSetActivator(partition1, pMid, pEnd, row, this.rows[row][pMid])
 
     this.algedonodeActivators.push(algAct0)
     this.algedonodeActivators.push(algAct1)
 
+    // Link those activation points to this partition
     for (let c = pStart; c <= pEnd; c++) {
       this.rows[row][c].setOutput([algAct0, algAct1])
     }
 
-    // We also wire up 8 and 9 here for each of rows 0-2
+    // We also wire up dial outputs 9 and 10 here for the first 3 rows - each activates
+    // the corresponding algedonode set activator, much like an algedonode output
     this.dials[row].link9and10(algAct0, algAct1)
 
+    // Link subpartitions
     this.linkPartitions(row + 1, pStart, pMid - 1)
     this.linkPartitions(row + 1, pMid, pEnd)
   }
 
+  /**
+   * Clear the graphic to the background colour.
+   * @protected
+   */
   clearRenderer() {
     this.renderer.clear()
   }
 
+  /**
+   * Clears activations across the algedonode hierarchy,
+   * resulting in no active components.
+   * @public
+   */
   clear() {
     this.rows.forEach(row => {
       row.forEach(algedonode => {
@@ -209,15 +243,27 @@ class AlgedonodeHierarchy {
     })
   }
 
+  /**
+   * Draw all hierarchy components and labels
+   * @public
+   */
   render() {
     this.renderComponents() // dial + outputs, algedonode, brass pads, strips, lights
     this.renderLabels()
   }
 
+  /**
+   * Draw labels
+   * @protected
+   */
   renderLabels() {
     this.renderer.rowAndColumnLabels()
   }
 
+  /**
+   * Draw components, in "z-axis" order to prevent unpleasant overlaps
+   * @protected
+   */
   renderComponents() {
     this.algedonodeActivators.forEach(aa => {
       aa.render(this.renderer)
@@ -238,74 +284,78 @@ class AlgedonodeHierarchy {
     })
   }
 
-  // newValue should be in [-1, 1]
+  /**
+   * Moves the given strip to the new offset away from 0 (the centre of each algedonode and the default 
+   * starting position); this offset must be between -1 (fully up) and 1 (fully down), inclusive
+   * @param {Number} stripNum column of the strip, integer 0 to 7 inclusive
+   * @param {Number} newValue new offset of the strip, in [-1, 1]
+   * @public
+   */
   moveStrip(stripNum, newValue) {
     this.strips[stripNum].setOffset(newValue)
   }
 
+  /**
+   * Sets the given dial to the given value in 1 to 10 inclusive
+   * @param {Number} dial row index of dial to set, from 0 to 3
+   * @param {Number} value value to set the dial to; must be in range 1 to 10 inclusive
+   * @public
+   */
   setDialValue(dial, value) {
     this.dials[dial].setDialValue(value)
   }
 
+  /**
+   * Propagates the currently-set dial values from the dial outputs all the way
+   * through the hierarchy.
+   * @public
+   */
   propagateDialValues() {
     this.dials.forEach(dial => {
       dial.propagateValue()
     })
   }
 
-  // Given 4 states, returns the result at the current strip settings
-  simulate(stateQuad) {
+  /**
+   * Simulates the outcome of a given dial state on the algedonode hierarchy, given
+   * the current strip settings. Clears activations, sets dial values from the state, 
+   * propagates, them, obtains the result.
+   * 
+   * DOES NOT render the process.
+   * @param {DialStates} state a dial state to simulate the outcome of
+   * @returns {StateResultPair} the result of the simulation
+   */
+  simulate(state) {
     this.clear()
-    let oldValues = this.dials.map(dial => dial.getDialValue())
-
-    for (let i = 0; i < 4; i++) {
-      this.dials[i].setDialValue(stateQuad[i])
-    }
-    for (let i = 0; i < 4; i++) {
+    state.forEach((value, i) => {
+      this.dials[i].setDialValue(value)
       this.dials[i].propagateValue()
-    }
+    })
 
-    let ret
-    for (let i = 0; i < 8; i++) {
-      if (this.lights[i][0].isActive()) {
-        ret = {
-          lightColumn: i,
-          aOrB: this.lights[i][0].getAorB(),
-        }
-      } else if (this.lights[i][1].isActive()) {
-        ret = {
-          lightColumn: i,
-          aOrB: this.lights[i][1].getAorB(),
-        }
-      }
-    }
-
-    for (let i = 0; i < 4; i++) {
-      this.dials[i].setDialValue(oldValues[i])
-    }
-    for (let i = 0; i < 4; i++) {
-      this.dials[i].propagateValue()
-    }
-
-    this.clear()
-    return ret
+    // we assume that there will always be a light on after a simulation completes
+    return this.getIlluminatedLight()
   }
 
   /**
    * @returns {Array.<StateResultPair>}
    */
   fullSimulate() {
-    let results = []
-    for (let i1 = 1; i1 <= 10; i1++) {
-      for (let i2 = 1; i2 <= 10; i2++) {
-        for (let i3 = 1; i3 <= 10; i3++) {
-          for (let i4 = 1; i4 <= 10; i4++) {
-            results.push({ state: [i1, i2, i3, i4], result: this.simulate([i1, i2, i3, i4]) })
-          }
-        }
-      }
-    }
+    let oldValues = this.dials.map(dial => dial.getDialValue())
 
+    let results = InitialValues.DIAL_STATES.map(state => {
+      return {
+        state,
+        result: this.simulate(state)
+      }
+    })
+
+    // Reset and restore, but don't send the old information to the data graphics, it's
+    // already stored! (also drawing it will reset the complete data just generated)
+    this.clear()
+    oldValues.forEach((value, i) => {
+      this.dials[i].setDialValue(value)
+      this.dials[i].propagateValue()
+    })
 
     return results
   }
@@ -319,18 +369,21 @@ class AlgedonodeHierarchy {
   }
 
   getIlluminatedLight() {
-    for (let i = 0; i < this.lights.length; i++) {
-      for (let j = 0; j < 2; j++) {
-        let light = this.lights[i][j]
-        if (light.isActive()) {
-          return {
-            lightColumn: light.getColumn(),
-            aOrB: light.getAorB(),
-          }
-        }
-      }
-    }
+    let lightOption = this.lights.flat().filter(light => light.isActive()).map(light => light.getDetails())
+    if (lightOption) return lightOption[0]
     return null
+    // for (let i = 0; i < this.lights.length; i++) {
+    //   for (let j = 0; j < 2; j++) {
+    //     let light = this.lights[i][j]
+    //     if (light.isActive()) {
+    //       return {
+    //         lightColumn: light.getColumn(),
+    //         aOrB: light.getAorB(),
+    //       }
+    //     }
+    //   }
+    // }
+    // return null
   }
 
   setNewContactPositions(contactHandler) {
@@ -647,6 +700,12 @@ class Strip {
   render(renderer) {
     renderer.strip(this.column, this.offset)
   }
+  /**
+   * Moves the strip to the new offset away from 0 (the centre of each algedonode and its original position); 
+   * this offset must be between -1 (fully up) and 1 (fully down), inclusive
+   * @param {Number} newOffset new offset of the strip, in [-1, 1]
+   * @protected
+   */
   setOffset(newOffset) {
     this.offset = newOffset
     this.brassPadPairs.forEach(brassPadPair => brassPadPair.setOffset(newOffset))
@@ -690,6 +749,13 @@ class Light {
 
   isActive() {
     return this.active
+  }
+
+  getDetails() {
+    return {
+      lightColumn: this.column,
+      aOrB: this.aOrB
+    }
   }
 
   getAorB() {

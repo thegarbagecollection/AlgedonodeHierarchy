@@ -37,19 +37,9 @@ class PlayModeHandler {
     /**
      * @type {DialStates}
      */
-    this.stateSequence = [] // in-order dial states (1,1,1,1)-(10,10,10,10)
+    this.stateSequence = InitialValues.DIAL_STATES // in-order dial states (1,1,1,1)-(10,10,10,10)
     this.rerenderFn = rerenderFn
     this.dialSetterFn = dialSetterFn
-
-    for (let i1 = 1; i1 <= 10; i1++) {
-      for (let i2 = 1; i2 <= 10; i2++) {
-        for (let i3 = 1; i3 <= 10; i3++) {
-          for (let i4 = 1; i4 <= 10; i4++) {
-            this.stateSequence.push([i1, i2, i3, i4])
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -118,8 +108,9 @@ class PlayModeHandler {
   playSequence() {
     this.stop()
     this.playMode = PlayModes.SEQUENCE
-    this.playIndex = 0
+    this.playIndex = 9000
     this.playInterval = window.setInterval(() => {
+      if (this.playIndex >= this.stateSequence.length) this.playIndex = 0
       this.setDialsDirect(this.stateSequence[this.playIndex++])
     }, this.createDelayFromSpeed())
   }
@@ -133,6 +124,7 @@ class PlayModeHandler {
     this.stop()
     this.playMode = PlayModes.SEQUENCE
     this.playInterval = window.setInterval(() => {
+      if (this.playIndex >= this.stateSequence.length) this.playIndex = 0
       this.setDialsDirect(this.stateSequence[this.playIndex++])
     }, this.createDelayFromSpeed())
   }
