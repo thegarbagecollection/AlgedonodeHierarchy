@@ -156,7 +156,7 @@ class AlgedonodeHierarchyRenderer {
     this.line({lineWidth, strokeStyle}, {x, y}, {x: x - this.positionInfo.columnWidth * 3 / 4, y} )
   }
 
-  brassPadPair(row, column, active, offset, attachedLight) {
+  brassPadPair(row, column, active, offset) {
     // (cX, cY) is centre of algedonode-padpair group
     let {cX, cY} =this.elementCentre(row, column, this.positionInfo)
     let lx = cX - this.positionInfo.columnWidth
@@ -175,12 +175,17 @@ class AlgedonodeHierarchyRenderer {
         this.rectangle({lineWidth, strokeStyle, fillStyle}, padTL[i].x, padTL[i].y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
     }
 
-    if (attachedLight) {
-        this.lightOutputWire(attachedLight, padTL, active)
-    }
-    else {
-        this.standardOutputWire(cY, padTL, active)
-    }
+    return { cY, padTL }
+  }
+
+  brassPadPairLightOutput(row, column, active, offset, attachedLight) {
+    let { cY, padTL } = this.brassPadPair(row, column, active, offset)
+    this.lightOutputWire(attachedLight, padTL, active)
+  }
+
+  brassPadPairNormalOutput(row, column, active, offset) {
+    let { cY, padTL } = this.brassPadPair(row, column, active, offset)
+    this.standardOutputWire(cY, padTL, active)
   }
 
   lightOutputWire(lightPair, padTL, active) {

@@ -1,4 +1,11 @@
 /**
+ * @typedef {[ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray]} ContactArray8
+ */
+/**
+ * @typedef {{1: ContactArray8, 2: ContactArray8, 4:ContactArray8,8:ContactArray8}} ContactsPositions
+ */
+
+/**
  * Deals with changing (and resetting) the contact positioning within the algedonode hierarchy;
  * contains default positions. Contacts are measured within the range -0.49 to 0.49, where the
  * centre of the algedonode (and starting mid-point between the brass pad pair) is 0, each
@@ -60,7 +67,7 @@ class ContactsHandler {
 
   /**
    * @param {Number} n an integer
-   * @returns {[ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray,ContactArray]} an 8-element array, 
+   * @returns {ContactArray8} an 8-element array, 
    * where each element is an array of n random contact positions in range -0.49 to 0.49; one array per column
    * @protected
    */
@@ -92,7 +99,7 @@ class ContactsHandler {
   }
 
   /**
-   * @returns {ContactArray} all the current contact positions
+   * @returns {ContactsPositions} all the current contact positions
    * @public
    */
   getContactsCurrent() {
@@ -100,7 +107,7 @@ class ContactsHandler {
   }
 
   /**
-   * @returns {ContactArray} all the default contact positions
+   * @returns {ContactsPositions} all the default contact positions
    * @public
    */
   getContactsDefault() {
