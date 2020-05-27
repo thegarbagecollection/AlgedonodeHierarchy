@@ -108,7 +108,7 @@ class PlayModeHandler {
   playSequence() {
     this.stop()
     this.playMode = PlayModes.SEQUENCE
-    this.playIndex = 9000
+    this.playIndex = 0
     this.playInterval = window.setInterval(() => {
       if (this.playIndex >= this.stateSequence.length) this.playIndex = 0
       this.setDialsDirect(this.stateSequence[this.playIndex++])

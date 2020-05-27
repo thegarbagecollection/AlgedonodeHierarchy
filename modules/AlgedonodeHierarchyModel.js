@@ -64,7 +64,7 @@ function partitionArray(array, partitionSize, cycleTo) {
       currPartition = []
     }
   }
-  
+
   // Cycle initial partitioning until final array is of appopriate size
   let currIndex = 0
   let ret = []
@@ -238,9 +238,6 @@ class AlgedonodeHierarchy {
       row.forEach(algedonode => {
         algedonode.clear()
       })
-    })
-    this.lights.forEach(lightPair => {
-      lightPair.forEach(light => light.clear())
     })
     this.dials.forEach(dial => {
       dial.clear()
@@ -442,7 +439,6 @@ class AlgedonodeHierarchy {
  * pad outputs, and an activating input coming from both some partition of the previous row's outputs and a direct dial output.
  */
 class Algedonode {
-  
   /**
    * @param {Number} row row of algedonode from 0 to 7 inclusive
    * @param {Number} column row of algedonode from 0 to 3 inclusive
@@ -500,7 +496,7 @@ class Algedonode {
 
   /**
    * The 0 and 1 outputs of this algedonode have to be set; pass whatever needs to be activated through to the brass pad objects
-   * @param { [AlgedonodeSetActivator, AlgedonodeSetActivator] } outputs the outputs to be set: 0 output in position 0, 
+   * @param { [AlgedonodeSetActivator, AlgedonodeSetActivator] } outputs the outputs to be set: 0 output in position 0,
    * and the 1 output in position 1
    * @protected
    */
@@ -509,7 +505,7 @@ class Algedonode {
   }
 
   /**
-   * Set this algedonode to inactive (except for first row algedonodes which are always active), set this algedonode's contacts to inactive, 
+   * Set this algedonode to inactive (except for first row algedonodes which are always active), set this algedonode's contacts to inactive,
    * and set the brass pads to inactive.
    * @protected
    */
@@ -668,58 +664,98 @@ class Contact {
  * The pair of adjacent brass pads linked to an algedonode. Takes a signal from a contact at
  * a certain position, and propagates it through the brass pad corresponding to contact's
  * position, through to either an algendonode set activator or light.
- * 
+ *
  * Has an offset in [-1,1] corresponding to slider offset coordinates in [-1, 1]; translates
  * to contact offsets coordinates [-0.5, 0.5], where (from starting positions) a positive value
- * indicates a 1 output and negative a 0; the centreline of the pad pair is at 0.
- * @todo can merge this.outputs with this.attachedLightPair
+ * indicates a 1 output and negative a 0; the centreline of the pad pair is at 0, the midpoint
+ * of the algedonode
  */
 class BrassPadPair {
   constructor() {
-    this.active = [false, false]
-    this.offset = 0
+    // renderer uses this to determine which of the two halves to outline
+    // -1 is none, 0 is top, 1 is bottom; corresponds to index of active output
+    this.active = -1
+    this.offset = 0 // brass pad centreline is midpoint of algedonode
     this.outputs = null
   }
 
-/**
- * Send this brass pad pair's outputs to the given pair of outputs, whether light or algedonode set activator
- * @param {[AlgedonodeSetActivator, AlgedonodeSetActivator] | [Light, Light]} outputs 
- */
+  /**
+   * Send this brass pad pair's outputs to the given pair of outputs, whether light or algedonode set activator;
+   * 0 output activates index 0, and 1 output activates index 1
+   * @param {[AlgedonodeSetActivator, AlgedonodeSetActivator] | [Light, Light]} outputs either a pair of lights or of algedonode
+   * set activators, where the 0 index element is activated by an algedonode / pad 0 output and the 1 index element by a 1 output.
+   */
   setOutput(outputs) {
     this.outputs = outputs
   }
 
+  /**
+   * Activates the brass pad which is underneath the activated contact.
+   * @param {Number} contactPosition the position of the activated contact, in (-0.5, 0.5)
+   */
   activate(contactPosition) {
-    // contact position is fixed, in (-0.5,0.5)
-    // this should work: if contactPos >= this.offset / 2, then 1 output, else 0 output
-
+    // contact position is fixed, in (-0.5,0.5); we reduce this pad pair's
+    // offset into the space [-0.5, 0.5] by dividing by 2, since they're both centred on 0
     if (contactPosition >= this.offset / 2) {
-      this.active[1] = true
+      this.active = 1
       this.outputs[1].activate(ActivationSources.ALGEDONODE)
     } else {
-      this.active[0] = true
+      this.active = 0
       this.outputs[0].activate(ActivationSources.ALGEDONODE)
     }
   }
 
+  /**
+   * Deactivates both brass pads and clears any active output element, whether light or algedonode set activator.
+   */
   clear() {
-    this.active = [false, false]
+    this.active = -1
     this.outputs.forEach(output => output.clear())
   }
+
+  /**
+   * Set the pad pair to the given vertical offset.
+   * @param {Number} offset number in [-1, 1], setting the position offset of this pad from centreline of algedonode
+   */
   setOffset(offset) {
     this.offset = offset
   }
+
+  /**
+   * Render this brass pad pair and outgoing wires according to whether its output is to a light or to
+   * an algedonode set activator.
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @param {Number} row parent algedonode's row index, from 0 to 7 inclusive
+   * @param {Number} column parent algedonode's column index, from 0 to  inclusive
+   */
   render(renderer, row, column) {
-    if (this.outputs[0].isLight()) {
+    if (this.outputIsLight()) {
       renderer.brassPadPairLightOutput(row, column, this.active, this.offset, this.outputs)
-    }
-    else {
+    } else {
       renderer.brassPadPairNormalOutput(row, column, this.active, this.offset)
     }
   }
+  /**
+   * @returns {Boolean} are this brass pad pair's outputs connected to a pair of lights?
+   */
+  outputIsLight() {
+    return this.outputs[0].isLight()
+  }
 }
 
+/**
+ * Controls activation of a partition of algedonodes in a row. May be activated by
+ * an algedonode's brass pad output or directly by dial output
+ */
 class AlgedonodeSetActivator {
+  /**
+   * 
+   * @param {Array.<Algedonode>} algedonodes the algedonodes in the partition to be activated when this algedonode set activator is activated
+   * @param {Number} startColumn the start column of the algedonode partition to activate
+   * @param {Number} endColumn the last column of the algedonode partition to activate
+   * @param {Number} row the row this algedonode set activator is controlled by
+   * @param {Algedonode} representativePartitionParent an arbitrary algedonode in the partition of algedonodes that this activator is controlled by    
+   */
   constructor(algedonodes, startColumn, endColumn, row, representativePartitionParent) {
     this.algedonodes = algedonodes
     this.active = false
@@ -883,7 +919,7 @@ class Light {
   }
 
   isLight() {
-    return true;
+    return true
   }
 
   isActive() {

@@ -171,7 +171,7 @@ class AlgedonodeHierarchyRenderer {
     let fillStyle = this.colourHandler.brassPad
 
     for (let i = 0; i < 2; i++) {
-        let strokeStyle = active[i] ? this.colourHandler.activated : this.colourHandler.brassPadEdge
+        let strokeStyle = i === active ? this.colourHandler.activated : this.colourHandler.brassPadEdge
         this.rectangle({lineWidth, strokeStyle, fillStyle}, padTL[i].x, padTL[i].y, this.positionInfo.columnWidth, this.positionInfo.rowHeight)
     }
 
@@ -196,7 +196,7 @@ class AlgedonodeHierarchyRenderer {
 
     for (let i = 0; i < 2; i++) {
         var {x, y} = this.lightWireJoinCoords(lightPair[i])
-        let strokeStyle = active[i] ? this.colourHandler.activated : "black"
+        let strokeStyle = i === active ? this.colourHandler.activated : "black"
         let start = { x: padTL[i].x, y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
         let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth,  y: padTL[i].y + multiplierY[i] * this.positionInfo.rowHeight }
         let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: y }
@@ -212,7 +212,7 @@ class AlgedonodeHierarchyRenderer {
     let multipliersY = [[0.1, 0.3], [0.9, -0.3]]
 
     for (let i = 0; i < 2; i++) {
-        let strokeStyle = active[i] ? this.colourHandler.activated : "black"
+        let strokeStyle = i === active ? this.colourHandler.activated : "black"
         let start = {x: padTL[i].x, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
         let p1 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: padTL[i].y + multipliersY[i][0] * this.positionInfo.rowHeight}
         let p2 = {x: padTL[i].x - multiplierX[i] * this.positionInfo.columnWidth, y: cY - multipliersY[i][1] * this.positionInfo.rowHeight}
