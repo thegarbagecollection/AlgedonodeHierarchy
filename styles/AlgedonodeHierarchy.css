@@ -1,0 +1,63 @@
+.vslide {
+    float: left;
+    margin: 15px;
+    height:150px;
+}
+
+#hierarchy-sliders-contacts {
+    float:left;
+}
+#dials-and-playback {
+    float:left;
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+#sliders {
+    margin-left: 50px;
+}
+
+#main {
+    float: none;
+}
+
+#algedonode-hierarchy {
+    border: 1px solid black;
+}
+
+#bar-chart {
+    width: 400px;
+    height: 200px;
+}
+#state-plot {
+    width: 400px;
+    height: 400px;
+}
+
+#label-speed  {
+    font-family: sans-serif;
+}
+#label-data-store-size {
+    font-family: sans-serif;
+}
+
+#data-graphics-and-controls {
+    float: left;
+}
+
+#system-settings {
+    float:left;
+    margin-right: 10px;
+}
+
+.ui-slider-handle {
+    text-align: center;
+}
+
+.label-colourpicker {
+    margin-left: 0.5em;
+}
+
+#metasystem-toggle {
+    width: 12em;
+}
