@@ -86,6 +86,7 @@ function partitionArray(array, partitionSize, cycleTo) {
  * algedonode hierarchy, giving the light resulting as output.
  *
  * 4 rows, 8 columns.
+ * @todo clear() should clear each component exactly once, not multiple times!
  */
 class AlgedonodeHierarchy {
   /**
@@ -93,10 +94,25 @@ class AlgedonodeHierarchy {
    */
   constructor(renderer) {
     this.renderer = renderer
+    /**
+     * @type {Array.<Dial>}
+     */
     this.dials = []
+    /**
+     * @type {Array.<Array.<Algedonode>>}
+     */
     this.rows = []
+    /**
+     * @type {Array.<Light>}
+     */
     this.lights = []
+    /**
+     * @type {Array.<Strip>}
+     */
     this.strips = []
+    /**
+     * @type {Array.<AlgedonodeSetActivator>}
+     */
     this.algedonodeActivators = [] // receives output from brass pads or dial, and passes it to its connected lower algedonode
     for (let i = 0; i < 4; i++) {
       this.dials[i] = new Dial(i)
@@ -448,6 +464,9 @@ class Algedonode {
     this.row = row
     this.column = column
     this.brassPadPair = new BrassPadPair()
+    /**
+     * @type {Array.<Contact>}
+     */
     this.contacts = []
     this.contactCount = 0
   }
@@ -676,6 +695,9 @@ class BrassPadPair {
     // -1 is none, 0 is top, 1 is bottom; corresponds to index of active output
     this.active = -1
     this.offset = 0 // brass pad centreline is midpoint of algedonode
+    /**
+     * @type {[AlgedonodeSetActivator, AlgedonodeSetActivator] | [Light, Light]}
+     */
     this.outputs = null
   }
 
@@ -684,6 +706,7 @@ class BrassPadPair {
    * 0 output activates index 0, and 1 output activates index 1
    * @param {[AlgedonodeSetActivator, AlgedonodeSetActivator] | [Light, Light]} outputs either a pair of lights or of algedonode
    * set activators, where the 0 index element is activated by an algedonode / pad 0 output and the 1 index element by a 1 output.
+   * @protected
    */
   setOutput(outputs) {
     this.outputs = outputs
@@ -692,6 +715,7 @@ class BrassPadPair {
   /**
    * Activates the brass pad which is underneath the activated contact.
    * @param {Number} contactPosition the position of the activated contact, in (-0.5, 0.5)
+   * @protected
    */
   activate(contactPosition) {
     // contact position is fixed, in (-0.5,0.5); we reduce this pad pair's
@@ -707,6 +731,7 @@ class BrassPadPair {
 
   /**
    * Deactivates both brass pads and clears any active output element, whether light or algedonode set activator.
+   * @protected
    */
   clear() {
     this.active = -1
@@ -716,6 +741,7 @@ class BrassPadPair {
   /**
    * Set the pad pair to the given vertical offset.
    * @param {Number} offset number in [-1, 1], setting the position offset of this pad from centreline of algedonode
+   * @protected
    */
   setOffset(offset) {
     this.offset = offset
@@ -727,6 +753,7 @@ class BrassPadPair {
    * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
    * @param {Number} row parent algedonode's row index, from 0 to 7 inclusive
    * @param {Number} column parent algedonode's column index, from 0 to  inclusive
+   * @protected
    */
   render(renderer, row, column) {
     if (this.outputIsLight()) {
@@ -737,6 +764,7 @@ class BrassPadPair {
   }
   /**
    * @returns {Boolean} are this brass pad pair's outputs connected to a pair of lights?
+   * @protected
    */
   outputIsLight() {
     return this.outputs[0].isLight()
@@ -749,12 +777,11 @@ class BrassPadPair {
  */
 class AlgedonodeSetActivator {
   /**
-   * 
    * @param {Array.<Algedonode>} algedonodes the algedonodes in the partition to be activated when this algedonode set activator is activated
    * @param {Number} startColumn the start column of the algedonode partition to activate
    * @param {Number} endColumn the last column of the algedonode partition to activate
    * @param {Number} row the row this algedonode set activator is controlled by
-   * @param {Algedonode} representativePartitionParent an arbitrary algedonode in the partition of algedonodes that this activator is controlled by    
+   * @param {Algedonode} representativePartitionParent an arbitrary algedonode in the partition of algedonodes controlling this activator
    */
   constructor(algedonodes, startColumn, endColumn, row, representativePartitionParent) {
     this.algedonodes = algedonodes
@@ -766,12 +793,22 @@ class AlgedonodeSetActivator {
     this.representativePartitionParent = representativePartitionParent
   }
 
+  /**
+   * Deactivate this algedonode set activator and all the algedonodes it is linked to.
+   * @protected
+   * @todo this clear() will end up triggering a large number of calls as it is at the moment, need to call each clear() once!
+   */
   clear() {
     this.active = false
     this.algedonodes.forEach(algedonode => algedonode.clear())
     this.activationSource = ActivationSources.NONE
   }
 
+  /**
+   * Activate this activator, although if the activation is coming from a dial output, ensure the partition in the above row is also active
+   * @param {ActivationSource} source is this activation coming from a dial output directly or via an algedonode contact?
+   * @protected
+   */
   activate(source) {
     // Need a bit of logic here - a dial output will only activate this
     // group if the parent group of algedonodes is currently activated
@@ -782,18 +819,37 @@ class AlgedonodeSetActivator {
     }
   }
 
+  /**
+   * This is not a light (used to see which renderer is called for the brass pad outputs)
+   * @protected
+   */
   isLight() {
     return false
   }
 
+  /**
+   * Render the wires and contacts for this activator
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @protected
+   */
   render(renderer) {
     renderer.algedonodeSetActivator(this.row, this.startColumn, this.algedonodes, this.activationSource, this.active)
   }
 }
 
+/**
+ * A dial which provides part of the hierarchy's input state. Outputs 1-8 go to the algedonodes in that row, and 9 and 10
+ * directly activate the next row's partitions or lights
+ */
 class Dial {
+  /**
+   * @param {Number} row row of this dial, 0 to 3 inclusive
+   */
   constructor(row) {
     this.row = row
+    /**
+     * @type {Array.<DialOutput>}
+     */
     this.dialOutputs = []
     for (let i = 0; i < 10; i++) {
       this.dialOutputs[i] = new DialOutput(i + 1) // we're using 1-indexed value!
@@ -801,22 +857,45 @@ class Dial {
     this.value = 1
   }
 
+  /**
+   * Set dial to given value
+   * @param {Number} value integer between 1 and 10 inclusive
+   * @protected
+   */
   setDialValue(value) {
     this.value = value
   }
 
+  /**
+   * Propagate this dial's output to the relevant algedonode contact or algedonode set activator,
+   * causing the activation of algedonode(s) in the following row.
+   * @protected
+   */
   propagateValue() {
     this.dialOutputs[this.value - 1].activate()
   }
 
+  /**
+   * @returns {Number} the current value of this dial
+   * @protected
+   */
   getDialValue() {
     return this.value
   }
 
+  /**
+   * @returns {Array.<DialOutput>} the 8 dial outputs to be linked to algedonode contacts
+   * @protected
+   */
   getDialOutputsForAlgedonodes() {
     return this.dialOutputs.slice(0, 8)
   }
 
+  /**
+   * Render this dial and all its outputs
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @protected
+   */
   render(renderer) {
     for (let i = 0; i < 10; i++) {
       this.dialOutputs[i].render(renderer, this.row, i)
@@ -825,55 +904,109 @@ class Dial {
     renderer.dial(this.row, this.value)
   }
 
+  /**
+   * Deactivate all the dial output of this dial
+   * @protected
+   */
   clear() {
     this.dialOutputs.forEach(dialOutput => {
       dialOutput.clear()
     })
   }
 
+  /**
+   * Set up links between outputs 9 and 10 of the dial and the corresponding algedonode set activators or lights
+   * @param {AlgedonodeSetActivator | Light} output9 algedonode set activator or light to activate on a 9
+   * @param {AlgedonodeSetActivator | Light} output10 algedonode set activator or light to activate on a 10
+   * @protected
+   */
   link9and10(output9, output10) {
     this.dialOutputs[8].link(output9)
     this.dialOutputs[9].link(output10)
   }
 }
 
+/**
+ * The output from a dial, linked to an algedonode contact or am algedonode set activator
+ */
 class DialOutput {
+  /**
+   *
+   * @param {Number} value the dial value that this output corresponds to and is activated by
+   */
   constructor(value) {
-    this.contacts = []
+    /**
+     * the contacts / algedonode set activator / light activated by this dial value
+     * @type {Array.<Contact | AlgedonodeSetActivator | Light>}
+     */
+    this.activatedComponents = []
     this.active = false
     this.value = value
   }
 
+  /**
+   * Activate this dial output, activating all connected algedonode contacts
+   * @protected
+   */
   activate() {
     this.active = true
-    this.contacts.forEach(contact => {
+    this.activatedComponents.forEach(contact => {
       contact.activate(this.value < 9 ? ActivationSources.ALGEDONODE : ActivationSources.DIAL_OUTPUT)
     })
   }
+
+  /**
+   * Deactivate this dial output and its corresponding contacts
+   * @protected
+   */
   clear() {
     this.active = false
-    this.contacts.forEach(contact => contact.clear())
+    this.activatedComponents.forEach(contact => contact.clear())
   }
 
-  link(contact) {
-    this.contacts.push(contact)
+  /**
+   * Creates a link between this dial output and a component activated by it
+   * @param {Contact | AlgedonodeSetActivator | Light} component a component to be activated by this dial output
+   * @protected
+   */
+  link(component) {
+    this.activatedComponents.push(component)
   }
 
+  /**
+   * Render this dial output
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @param {Number} row overall row index that this dial output is in, 0-3 inclusive
+   * @param {Number} outputNum the dial output's index within the dial's outputs, 0-9 inclusive
+   * @protected
+   */
   render(renderer, row, outputNum) {
     renderer.dialOutput(row, this.active, outputNum)
   }
 }
 
+/**
+ * Strip which the brass pad pairs rest on and are moved by
+ */
 class Strip {
-  // 4-element array of brass pad pairs,    in row order
+  /**
+   * @param {Array.<BrassPadPair>} brassPadPairs the brass pad pairs which will move when this strip does
+   * @param {Number} column the column of the hierarchy this strip belongs to
+   */
   constructor(brassPadPairs, column) {
     this.brassPadPairs = brassPadPairs
     this.offset = 0 // will be controlled by sliders
     this.column = column
   }
+
+  /**
+   * Render the strip
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   */
   render(renderer) {
     renderer.strip(this.column, this.offset)
   }
+
   /**
    * Moves the strip to the new offset away from 0 (the centre of each algedonode and its original position);
    * this offset must be between -1 (fully up) and 1 (fully down), inclusive
@@ -886,7 +1019,16 @@ class Strip {
   }
 }
 
+/**
+ * Light output, has a type of A or B corresponding to the two light rows of the hierarchy,
+ * where an A light is triggered by a 1 output of the above algedonode, and the B by the 0 output.
+ */
 class Light {
+  /**
+   *
+   * @param {LightType} aOrB is this light is light row A or light row B?
+   * @param {Number} column the column this light is rendered under
+   */
   constructor(aOrB, column) {
     this.aOrB = aOrB
     this.active = false
@@ -894,38 +1036,83 @@ class Light {
     this.parent = null
     this.activationSource = ActivationSources.NONE
   }
+  /**
+   * Sets the algedonode which controls this light
+   * @param {Algedonode} parent the algedonode controlling this light
+   * @protected
+   */
   setParent(parent) {
     this.parent = parent
   }
+
+  /**
+   * @returns {Number} the column this light is in
+   * @public
+   */
   getColumn() {
     return this.column
   }
+
+  /**
+   * Activate this light, from some activation source - direct from a dial output, or from an algedonode
+   * @param {ActivationSource} source the activation source for this light
+   * @protected
+   */
   activate(source) {
     if ((source === ActivationSources.DIAL_OUTPUT && this.parent.isActive()) || source === ActivationSources.ALGEDONODE) {
       this.active = true
       this.activationSource = source
     }
   }
+
+  /**
+   * Deactivates this light
+   * @protected
+   */
   clear() {
     this.active = false
     this.activationSource = ActivationSources.NONE
   }
+
+  /**
+   * Render this light with all its connection wires
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @protected
+   */
   render(renderer) {
     renderer.light(this, this.column, this.aOrB, this.active, this.activationSource)
   }
 
+  /**
+   * Render this light without any connection wires (metasystem viewpoint)
+   * @param {AlgedonodeHierarchyRenderer} renderer renderer to use
+   * @protected
+   */
   renderAsMetaSystem(renderer) {
     renderer.metasystemLight(this.column, this.aOrB, this.active)
   }
 
+  /**
+   * This is a light (used to see which renderer is called for the brass pad outputs)
+   * @protected
+   */
   isLight() {
     return true
   }
 
+  /**
+   * @returns {Boolean} is this light on at the moment?
+   * @public
+   */
   isActive() {
     return this.active
   }
 
+  /**
+   * Get the light's column and its light row (of A or B)
+   * @returns {{lightColumn: Number, aOrB: LightType}} a record of this light's position
+   * @protected
+   */
   getDetails() {
     return {
       lightColumn: this.column,
@@ -933,16 +1120,24 @@ class Light {
     }
   }
 
+  /**
+   * @returns {LightType} is this light in light row A or B?
+   * @public
+   */
   getAorB() {
     return this.aOrB
   }
 
+  /**
+   * @returns {Number} the column of this light, 0-7 inclusive
+   * @public
+   */
   getColumn() {
     return this.column
   }
 }
 
-// Hacls to get LightType and ActivationSource represented as types for enums
+// Hacks to get LightType and ActivationSource represented as types for enums
 /**
  * @class
  */
