@@ -530,7 +530,7 @@ class Algedonode {
    */
   clear() {
     // Row 0 algedonodes are always active
-    if (this.row !== 0) {
+    if (this.row !== 0 && this.active) {
       this.active = false
       this.contacts.forEach(contact => {
         contact.algedonodeActive = false
@@ -799,9 +799,11 @@ class AlgedonodeSetActivator {
    * @todo this clear() will end up triggering a large number of calls as it is at the moment, need to call each clear() once!
    */
   clear() {
-    this.active = false
-    this.algedonodes.forEach(algedonode => algedonode.clear())
-    this.activationSource = ActivationSources.NONE
+    if (this.active) {
+      this.active = false
+      this.algedonodes.forEach(algedonode => algedonode.clear())
+      this.activationSource = ActivationSources.NONE
+    }
   }
 
   /**
@@ -960,8 +962,10 @@ class DialOutput {
    * @protected
    */
   clear() {
-    this.active = false
-    this.activatedComponents.forEach(contact => contact.clear())
+    if (this.active) {
+      this.active = false
+      this.activatedComponents.forEach(component => component.clear())
+    }
   }
 
   /**
