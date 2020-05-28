@@ -1,0 +1,82 @@
+<!--
+/*
+ * This was all compressed into one file to allow it to run on codepen.
+ * Proper version is at https://github.com/thegarbagecollection/AlgedonodeHierarchy
+ */
+-->
+
+<html>
+    <head>
+        <title>Stafford Beer's Brain of the Firm Chapter 5 - An Algedonode Hierarchy</title>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+        <link rel="stylesheet" type="text/css" href="./style.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
+        <script src="./combined.js"></script>
+    </head>
+    <body>
+        <!-- Always-visible interface elements -->
+        <div id="main">
+            <div id="hierarchy-sliders-contacts">
+                <canvas id="algedonode-hierarchy" width="600px" height="600px"></canvas>
+                <p></p>
+                <div id="system-settings">
+                    <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="random-contacts">Random contacts</button></p>
+                    <p><button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="default-contacts">Default contacts</button></p>
+                    <p><button class="ui-button ui-widget ui-corner-all" id="metasystem-toggle"></button></p>
+                </div>
+                <div id="sliders">
+                    <div class="vslide" id="vslide0"><div class="ui-slider-handle">1</div></div>
+                    <div class="vslide" id="vslide1"><div class="ui-slider-handle">2</div></div>
+                    <div class="vslide" id="vslide2"><div class="ui-slider-handle">3</div></div>
+                    <div class="vslide" id="vslide3"><div class="ui-slider-handle">4</div></div>
+                    <div class="vslide" id="vslide4"><div class="ui-slider-handle">5</div></div>
+                    <div class="vslide" id="vslide5"><div class="ui-slider-handle">6</div></div>
+                    <div class="vslide" id="vslide6"><div class="ui-slider-handle">7</div></div>
+                    <div class="vslide" id="vslide7"><div class="ui-slider-handle">8</div></div>
+                </div>
+            </div>
+            <div id="dials-and-playback">
+                <p><input type=text class="dial" id="dial0" value="0"></input></p>
+                <p><input type=text class="dial" id="dial1" value="0"></input></p>
+                <p><input type=text class="dial" id="dial2" value="0"></input></p>
+                <p><input type=text class="dial" id="dial3" value="0"></input></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="random-state">Random (step)</button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="play-sequence">Sequence<span class="ui-icon ui-icon-play"></span></button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="play-random">Random<span class="ui-icon ui-icon-play"></span></button></p>
+                <p><button class="ui-button ui-widget ui-corner-all" id="stop">Stop<span class="ui-icon ui-icon-stop"></span></button></p>
+                <p><label for="speed" id="label-speed">Speed</label><div class="hslide" id="speed"></div></p>
+            </div>
+            <div id="data-graphics-and-controls">
+                <p><canvas id="bar-chart" width="400" height="200"></canvas></p>
+                <p><canvas id="state-plot" width="400" height="400"></canvas></p>
+                <p><label for="data-store-size" id="label-data-store-size">Data point store space</label><div class="hslide" id="data-store-size"></div></p>
+                <br />
+                <div id="data-graphics-controls"><p>
+                    <button class="ui-button ui-widget ui-corner-all metasystem-disabled" id="draw-full-data-graphics">Full simulation</button>
+                    <button class="ui-button ui-widget ui-corner-all" id="reset-data-graphics-and-data">Reset data graphics & data store</button></p>
+                </div>
+                <div id="colour-settings">
+                    <button class="ui-button ui-widget ui-corner-all" id="change-colours">Colour settings<span class="ui-icon ui-icon-gear"></span></button>
+                    <button class="ui-button ui-widget ui-corner-all" id="default-colours">Restore default colours<span class="ui-icon ui-icon-arrowreturnthick-1-w"></span></button>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Modal dialog boxes -->
+        <div id="dialog-colour-picker-form" title="Select colours">
+            <form>
+                <fieldset id="colour-picker-field">
+                    <!-- Will be filled programmatically by Interface.js from colours in ColourHandler.js -->
+                </fieldset>
+            </form>
+        </div>
+        <div id="dialog-confirm-delete">
+            <p><span class="ui-icon ui-icon-alert"></span>Restore default colours?</p>
+        </div>
+    </body>
+</html>
